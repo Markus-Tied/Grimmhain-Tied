@@ -1,0 +1,70 @@
+/* ============================================================
+   GRIMMHAIN – Design Tokens
+   Zentrale Wahrheit für alle Farben, Abstände, Schriften.
+   Wird in index.html, setup.html, game.html eingebunden.
+   ============================================================ */
+
+:root {
+
+  /* ── Farben ── */
+  --color-bg:          #05070f;
+  --color-bg-soft:     #0b0f22;
+  --color-panel:       rgba(8, 12, 30, 0.92);
+  --color-panel-border:rgba(201, 168, 76, 0.25);
+  --color-gold:        #C9A84C;
+  --color-gold-glow:   rgba(201, 168, 76, 0.4);
+  --color-text:        #e8ecff;
+  --color-text-muted:  #a9b0d6;
+  --color-good:        #43e59b;
+  --color-warn:        #ffc857;
+  --color-bad:         #ff5d7a;
+  --color-wolf:        #C1121F;
+  --color-village:     #2A9D8F;
+  --color-solo:        #7B2D8B;
+
+  /* ── Typografie ── */
+  --font-display: 'Cinzel', serif;
+  --font-body:    'IM Fell English', Georgia, serif;
+
+  /* Fluid Schriftgrößen (iPhone Landscape 844px → iPad 1024px) */
+  --text-xs:   clamp(10px, 1.2vw, 12px);
+  --text-sm:   clamp(12px, 1.4vw, 14px);
+  --text-base: clamp(14px, 1.6vw, 16px);
+  --text-md:   clamp(16px, 1.9vw, 20px);
+  --text-lg:   clamp(20px, 2.4vw, 26px);
+  --text-xl:   clamp(26px, 3.2vw, 36px);
+  --text-hero: clamp(32px, 4.5vw, 52px);
+
+  /* ── Abstände ── */
+  --space-1: clamp(4px,  0.5vw, 6px);
+  --space-2: clamp(8px,  1vw,   12px);
+  --space-3: clamp(12px, 1.5vw, 16px);
+  --space-4: clamp(16px, 2vw,   24px);
+  --space-5: clamp(24px, 3vw,   36px);
+  --space-6: clamp(32px, 4vw,   48px);
+
+  /* ── Touch-Targets ── */
+  --touch-min:     44px;
+  --touch-primary: 52px;
+
+  /* ── Radien ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* ── Schatten / Glow ── */
+  --shadow-panel: 0 8px 32px rgba(0,0,0,0.7);
+  --glow-gold:    0 0 16px rgba(201,168,76,0.4);
+  --glow-good:    0 0 14px rgba(67,229,155,0.4);
+
+  /* ── Transitions ── */
+  --transition-fast: 0.12s ease;
+  --transition-base: 0.22s ease;
+
+  /* ── Safe Areas (iOS) ── */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+}

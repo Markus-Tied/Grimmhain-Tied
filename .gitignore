@@ -1,0 +1,28 @@
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backups
+*.bak
+*.tmp
+*~
+
+# Node
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Große Audio-Datei (83 MB – zu groß für GitHub ohne LFS)
+assets/sounds/Nachtmusik.mp3

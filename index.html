@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grimmhain – Werewolf Reckoning</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05070f">
+<link rel="apple-touch-icon" href="assets/icons/app/apple-touch-icon.png">
+<script>
+if (location.protocol === 'http:' || location.protocol === 'https:')
+  document.write('<link rel="manifest" href="manifest.json">');
+(function() {
+  if (location.protocol === 'file:')
+    document.documentElement.classList.add('grimm-file-protocol');
+})();
+</script>
+<style>
+@font-face { font-family:'Cinzel'; font-weight:400; src:url('assets/fonts/Cinzel-Regular.ttf') format('truetype'); }
+@font-face { font-family:'Cinzel'; font-weight:700; src:url('assets/fonts/Cinzel-Bold.ttf') format('truetype'); }
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body {
+  width:100%; height:100%; overflow:hidden;
+  background:#05070f; color:#e8ecff;
+  font-family:'Cinzel',Georgia,serif;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* Screens */
+.screen {
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  background-color:#05070f; background-size:cover; background-position:center;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.25s ease; z-index:10;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.screen.active { opacity:1; pointer-events:auto; }
+
+/* Portrait */
+#portraitWarning {
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:#05070f; align-items:center; justify-content:center;
+  flex-direction:column; gap:16px; text-align:center;
+  font-family:'Cinzel',serif; color:#a9b0d6;
+}
+@media (orientation:portrait) { #portraitWarning { display:flex; } }
+
+/* ── BOOT ── */
+#bootScreen {
+  background-image: url('assets/icons/setup/De_Setup1_new.png');
+}
+
+/* ── Start-Button als Bild ──
+   top:  HIER anpassen (höher = kleiner %)
+   left: gleich wie Logo left              */
+.boot-start-btn {
+  position: absolute;
+  top:  46%;                        /* ← ANPASSEN */
+  left: 45%;                        /* ← ANPASSEN */
+  transform: translateX(-50%);
+  width: clamp(360px, 40vw, 640px); /* ← GRÖSSE  */
+
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s, filter 0.12s;
+}
+.boot-start-btn::before {
+  content: '';
+  display: block;
+  width: 100%;
+  padding-top: 49.5%; /* Seitenverhältnis start.png ~1322×654 */
+  background: url('assets/icons/app/start.png') center/contain no-repeat;
+}
+.boot-start-btn:hover {
+  filter: brightness(1.15) drop-shadow(0 0 18px rgba(220,80,30,0.6));
+}
+.boot-start-btn:active {
+  transform: translateX(-50%) scale(0.93);
+  filter: brightness(0.85);
+}
+
+/* ── Logo Banner im Boot-Screen ── */
+.boot-logo-wrap {
+  position: absolute;
+  top: 35%;
+  left: 45%;
+  transform: translate(-50%, -60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+.boot-logo-wrap.hidden { opacity: 0; }
+.boot-logo-img {
+  width: clamp(260px, 35vw, 520px);
+  height: auto;
+  filter: drop-shadow(0 0 32px rgba(201,168,76,0.25))
+          drop-shadow(0 0 8px rgba(0,0,0,0.8));
+}
+
+/* ── START-SCREEN – auflösungsunabhängig (Prozent zum Viewport) ── */
+#startScreen {
+  background-image: url('assets/icons/setup/De_Setup1_new.png');
+  background-size: cover;
+  background-position: center;
+  position: fixed;
+  inset: 0;
+  align-items: unset;
+  justify-content: unset;
+}
+
+.start-card {
+  /* Mittelpunkt des Bild-Rahmens: left 45%, top 38% */
+  position: absolute;
+  left: 45%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+
+  width: 31%;
+  min-width: 280px;
+  max-width: 560px;
+
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1vh, 14px);
+  padding: clamp(12px, 2vh, 24px) clamp(14px, 2vw, 32px);
+  opacity: 0;
+  transition: opacity 0.3s ease 0.1s;
+}
+.screen.active .start-card { opacity: 1; }
+.start-card::before,
+.start-card::after { display: none; }
+
+.sc-title {
+  /* Text ausgeblendet – Logo-Bild übernimmt */
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Logo nach unten: Wert erhöhen = weiter unten */
+  margin-top: clamp(8px, 1.8vh, 20px);
+}
+.sc-title-img {
+  width: clamp(160px, 18vw, 280px);  /* ← GRÖSSE anpassen */
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(201,168,76,0.18)) drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+  display: block;
+}
+.sc-subtitle {
+  font-size:clamp(14px,1.6vw,18px); letter-spacing:0.2em; text-transform:uppercase;
+  color:rgba(125,132,168,0.52); text-align:center; margin-top:-4px;
+  text-shadow:0 1px 3px rgba(0,0,0,0.45);
+}
+.sc-divider {
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,0.18) 30%,rgba(201,168,76,0.18) 70%,transparent);
+}
+.sc-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.sc-label {
+  font-size:18px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase;
+  color:rgba(118,126,158,0.58); white-space:nowrap;
+  text-shadow:0 1px 2px rgba(0,0,0,0.35);
+}
+.stepper { display:flex; align-items:center; gap:6px; }
+.stepper-btn {
+  width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  background:rgba(8,10,22,0.42); border:1px solid rgba(201,168,76,0.22); border-radius:6px;
+  color:rgba(175,152,95,0.72); font-size:20px; font-family:'Cinzel',serif; cursor:pointer;
+  backdrop-filter:blur(4px); transition:background 0.1s,transform 0.1s,border-color 0.12s;
+}
+.stepper-btn:active { background:rgba(201,168,76,0.1); transform:scale(0.92); }
+.stepper-btn:disabled { opacity:0.3; pointer-events:none; }
+.stepper-val {
+  font-size:clamp(20px,2.4vw,28px); font-weight:700;
+  color:rgba(178,186,212,0.82); min-width:42px; text-align:center;
+  text-shadow:0 1px 4px rgba(0,0,0,0.55);
+}
+.lang-group { display:flex; gap:6px; }
+.lang-btn {
+  width:48px; height:44px; font-family:'Cinzel',serif; font-size:10px; font-weight:700;
+  letter-spacing:0.1em; background:rgba(8,10,22,0.42);
+  border:1px solid rgba(201,168,76,0.14); border-radius:6px;
+  color:rgba(130,138,172,0.48); cursor:pointer; backdrop-filter:blur(4px); transition:all 0.12s;
+}
+.lang-btn.active { background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.38); color:rgba(175,155,105,0.78); }
+.lang-btn:active { transform:scale(0.94); }
+.akt-group { display:flex; flex-wrap:wrap; gap:6px; }
+.akt-btn {
+  min-width:34px; height:44px; font-family:'Cinzel',serif; font-size:9px; font-weight:700;
+  letter-spacing:0.08em; background:rgba(8,10,22,0.42);
+  border:1px solid rgba(201,168,76,0.14); border-radius:6px;
+  color:rgba(130,138,172,0.48); cursor:pointer; backdrop-filter:blur(4px);
+  transition:all 0.12s; padding:0 7px;
+}
+.akt-btn.active { background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.38); color:rgba(175,155,105,0.78); }
+.akt-btn:active { transform:scale(0.94); }
+.sc-btn {
+  width:100%; height:clamp(40px,5vh,48px); font-family:'Cinzel',serif;
+  font-size:clamp(17px,1.5vw,19px); font-weight:700; letter-spacing:0.16em;
+  text-transform:uppercase; border-radius:8px; cursor:pointer; transition:all 0.12s;
+  text-shadow:0 1px 3px rgba(0,0,0,0.4);
+}
+.sc-btn:active { transform:scale(0.97); }
+.sc-btn--primary {
+  background: rgba(6,9,18,0.38);
+  /* Rahmen dünner: 0.5px (auf manchen Screens ~1px). Alternativ: 1px + niedrigere Opazität */
+  border: 5px solid rgba(201,168,76,0.2);
+  color: rgba(88,155,118,0.78);
+  backdrop-filter: blur(4px);
+}
+.sc-btn--secondary {
+  background:rgba(6,9,18,0.38);
+  border: 0.5px solid rgba(201,168,76,0.2);
+  color:rgba(168,148,102,0.72); backdrop-filter:blur(4px);
+}
+.sc-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.12);
+  color: rgba(115, 68, 58, 0.58);
+  font-size: 13px;
+  height: 32px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.sc-btn[hidden] { display:none; }
+
+@media (max-height:430px) {
+  .start-card { gap:6px; padding:8px 12px; }
+  .sc-title { font-size:13px; }
+  .sc-btn { height:38px; font-size:9px; }
+  .stepper-btn { width:36px; height:36px; font-size:16px; }
+  .lang-btn { height:36px; width:42px; }
+  .akt-btn { height:36px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { transition-duration:0.01ms !important; }
+}
+</style>
+<script src="js/core/i18n.js"></script>
+<script src="js/core/roles.js"></script>
+<script src="js/core/cards.js"></script>
+<script src="js/core/state.js"></script>
+</head>
+<body>
+
+<div id="portraitWarning">
+  <div style="font-size:40px">🔄</div>
+  <div id="portraitWarnTitle">Bitte Gerät drehen</div>
+  <div id="portraitWarnSub" style="font-size:12px;opacity:0.5">Grimmhain funktioniert nur im Querformat</div>
+</div>
+
+<div id="bootScreen" class="screen active">
+  <!-- Grimmhain Logo Banner -->
+  <div class="boot-logo-wrap" id="bootLogoWrap">
+    <img
+      class="boot-logo-img"
+      src="assets/icons/app/Grimmhain_Werwolf_Reckoning_Logo.png"
+      alt="Grimmhain – Werewolf Reckoning"
+      draggable="false"
+    >
+  </div>
+  <button class="boot-start-btn" id="bootStartBtn" aria-label="Start"></button>
+</div>
+
+<div id="startScreen" class="screen">
+  <div class="start-card">
+    <div class="sc-title">
+      <img class="sc-title-img"
+           src="assets/icons/app/Grimmhain-Logo.png"
+           alt="Grimmhain"
+           draggable="false">
+    </div>
+    <div class="sc-subtitle" id="startSubtitle">Moderator Dashboard</div>
+    <div class="sc-divider"></div>
+    <div class="sc-row">
+      <span class="sc-label" id="labelPlayers">Spieler</span>
+      <div class="stepper">
+        <button class="stepper-btn" id="playerMinus">−</button>
+        <span class="stepper-val" id="playerDisplay">12</span>
+        <button class="stepper-btn" id="playerPlus">+</button>
+      </div>
+    </div>
+    <div class="sc-row">
+      <span class="sc-label" id="labelAkt">Akt</span>
+      <div class="akt-group">
+        <button class="akt-btn active" id="aktI"      title="Akt I — Howl of the Hollow">I</button>
+        <button class="akt-btn"        id="aktII"     title="Akt II — Veins of the Old Forest">II</button>
+        <button class="akt-btn"        id="aktIII"    title="Akt III — The Looking-Glass Choir">III</button>
+        <button class="akt-btn"        id="aktIV"     title="Akt IV — Ash Crown of Grimmhain">IV</button>
+        <button class="akt-btn"        id="aktCustom" title="Custom — Alle 72 Rollen">CUSTOM</button>
+      </div>
+    </div>
+    <div class="sc-row">
+      <span class="sc-label" id="labelLanguage">Sprache</span>
+      <div class="lang-group">
+        <button class="lang-btn active" id="langDe">DE</button>
+        <button class="lang-btn" id="langEn">EN</button>
+      </div>
+    </div>
+    <div class="sc-divider"></div>
+    <button class="sc-btn sc-btn--primary" id="startSetupBtn">⚙ Setup starten</button>
+    <button class="sc-btn sc-btn--secondary" id="resumeBtn" hidden>▶ Letzte Sitzung fortsetzen</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var MIN=4,MAX=40,LS_LANG='grimmhain_lang',LS_AKT='grimmhain_akt',LS_STATE='uw_custom_v16',count=12;
+  var bootScreen=document.getElementById('bootScreen');
+  var startScreen=document.getElementById('startScreen');
+  var bootBtn=document.getElementById('bootStartBtn');
+  var minusBtn=document.getElementById('playerMinus');
+  var plusBtn=document.getElementById('playerPlus');
+  var display=document.getElementById('playerDisplay');
+  var langDe=document.getElementById('langDe');
+  var langEn=document.getElementById('langEn');
+  var setupBtn=document.getElementById('startSetupBtn');
+  var resumeBtn=document.getElementById('resumeBtn');
+  var labelAkt=document.getElementById('labelAkt');
+
+  function hasSession(){
+    try{var s=JSON.parse(localStorage.getItem(LS_STATE));return !!(s&&s.seats&&s.seats.length>0);}
+    catch(e){return false;}
+  }
+  function savedCount(){
+    try{var s=JSON.parse(localStorage.getItem(LS_STATE));return(s&&s.seats)?s.seats.length:12;}
+    catch(e){return 12;}
+  }
+  function setCount(n){
+    count=Math.max(MIN,Math.min(MAX,n));
+    display.textContent=count;
+    minusBtn.disabled=count<=MIN; plusBtn.disabled=count>=MAX;
+  }
+  function setLang(lang){
+    try{localStorage.setItem(LS_LANG,lang);}catch(e){}
+    langDe.classList.toggle('active',lang==='de');
+    langEn.classList.toggle('active',lang==='en');
+    var isDE=lang==='de';
+    if(portraitWarnTitle) portraitWarnTitle.textContent=isDE?'Bitte Gerät drehen':'Please rotate your device';
+    if(portraitWarnSub) portraitWarnSub.textContent=isDE?'Grimmhain funktioniert nur im Querformat':'Grimmhain works in landscape mode only';
+    if(startSubtitle) startSubtitle.textContent=isDE?'Moderatoren-Dashboard':'Moderator Dashboard';
+    if(labelPlayers) labelPlayers.textContent=isDE?'Spieler':'Players';
+    if(labelLanguage) labelLanguage.textContent=isDE?'Sprache':'Language';
+    setupBtn.textContent=isDE?'⚙ Setup starten':'⚙ Start setup';
+    resumeBtn.textContent=isDE?'▶ Letzte Sitzung fortsetzen':'▶ Resume last session';
+    if(labelAkt) labelAkt.textContent=isDE?'Akt':'Act';
+    if(bootBtn) bootBtn.setAttribute('aria-label',isDE?'Weiter zum Dashboard':'Continue to dashboard');
+  }
+  function saveAndGo(url){
+    try{
+      var s=JSON.parse(localStorage.getItem(LS_STATE))||{};
+      s.seats=s.seats||[];
+      while(s.seats.length<count){
+        var id=s.seats.length+1;
+        s.seats.push({id:id,name:'',role:'',
+          flags:{dead:false,protected:false,targeted:false,inlove:false,rival:false,
+                 werewolf:false,vorbild:false,nominated:false,charmed:false,
+                 poisoned:false,burned:false,puppet:false,hmark:false},
+          meta:{cerbHeads:0,killedTonight:false,cursedWolfAura:false,
+                rivalId:null,loverId:null,unholy:false,blockedTonight:false}});
+      }
+      while(s.seats.length>count)s.seats.pop();
+      if(!s.once)s.once={};
+      if(!s.layout)s.layout={scale:100,ratio:120,offx:0,offy:0};
+      if(!s.files)s.files={night:null,nightPos:0,alarm:null};
+      s.dark=s.dark||false; s.nightCount=s.nightCount||1;
+      localStorage.setItem(LS_STATE,JSON.stringify(s));
+    }catch(e){}
+    window.location.href=url;
+  }
+  function showResume(show){
+    if(show){resumeBtn.removeAttribute('hidden');}
+    else{resumeBtn.setAttribute('hidden','');}
+  }
+  function setAkt(aktId){
+    try{localStorage.setItem(LS_AKT,aktId);}catch(e){}
+    var aktBtns=[
+      {id:'aktI',val:'akt1'},{id:'aktII',val:'akt2'},{id:'aktIII',val:'akt3'},
+      {id:'aktIV',val:'akt4'},{id:'aktCustom',val:'custom'}
+    ];
+    aktBtns.forEach(function(b){
+      var el=document.getElementById(b.id);
+      if(el) el.classList.toggle('active',b.val===aktId);
+    });
+  }
+
+  bootBtn.addEventListener('click',function(){
+    /* Logo sanft ausblenden */
+    var logoWrap = document.getElementById('bootLogoWrap');
+    if (logoWrap) logoWrap.classList.add('hidden');
+    /* Kurz warten damit fade sichtbar ist, dann Screen wechseln */
+    setTimeout(function() {
+      bootScreen.classList.remove('active');
+      startScreen.classList.add('active');
+    }, 350);
+  });
+  minusBtn.addEventListener('click',function(){setCount(count-1);});
+  plusBtn.addEventListener('click',function(){setCount(count+1);});
+  langDe.addEventListener('click',function(){setLang('de');});
+  langEn.addEventListener('click',function(){setLang('en');});
+  setupBtn.addEventListener('click',function(){saveAndGo('setup.html');});
+  resumeBtn.addEventListener('click',function(){window.location.href='game.html';});
+  document.getElementById('aktI').addEventListener('click',function(){setAkt('akt1');});
+  document.getElementById('aktII').addEventListener('click',function(){setAkt('akt2');});
+  document.getElementById('aktIII').addEventListener('click',function(){setAkt('akt3');});
+  document.getElementById('aktIV').addEventListener('click',function(){setAkt('akt4');});
+  document.getElementById('aktCustom').addEventListener('click',function(){setAkt('custom');});
+
+  var lang='de';
+  try{lang=localStorage.getItem(LS_LANG)||'de';}catch(e){}
+  var akt='akt1';
+  try{akt=localStorage.getItem(LS_AKT)||'akt1';}catch(e){}
+  setLang(lang); setAkt(akt); setCount(savedCount()); showResume(hasSession());
+})();
+</script>
+<script>
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

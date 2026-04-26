@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grimmhain – Setup</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05070f">
+
+<style>
+@font-face {
+  font-family: 'Cinzel';
+  font-weight: 400;
+  src: url('assets/fonts/Cinzel-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-weight: 700;
+  src: url('assets/fonts/Cinzel-Bold.ttf') format('truetype');
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #05070f url('assets/icons/setup/Setup2_new.png') center/cover no-repeat;
+  color: #e8ecff;
+  font-family: 'Cinzel', Georgia, serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Layout – auflösungsunabhängig (Prozent zum Viewport) ── */
+.setup-page {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+}
+
+.setup-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+  background: rgba(3,5,14,0.8);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+/* ════════════════════════════════════════════════
+   POSITIONIERUNG – je Step einzeln anpassbar
+   ════════════════════════════════════════════════
+
+   STEP 1 (Spielernamen eingeben):
+     left   = Abstand vom linken Bildschirmrand
+     top    = Abstand vom oberen Rand
+     width  = Breite des Content-Bereichs
+     height = Höhe des Content-Bereichs
+*/
+.setup-content {
+  position: absolute;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  /* Standardwerte (Fallback) */
+  left: 27%; top: 20%; width: 45%; height: 45%;
+  padding: clamp(12px, 1.5vh, 20px) clamp(14px, 1.5vw, 24px);
+}
+
+/* ── STEP 1: Spielernamen eingeben ─────────────
+   Hier left / top / width / height anpassen:    */
+.setup-content--step1 {
+  left:   27%;   /* ← links  */
+  top:    20%;   /* ← oben   */
+  width:  45%;   /* ← breite */
+  height: 45%;   /* ← höhe   */
+}
+
+/* ── STEP 2: Rollen auswählen ──────────────────
+   Hier left / top / width / height anpassen:    */
+.setup-content--step2 {
+  left:   27%;   /* ← links  */
+  top:    20%;   /* ← oben   */
+  width:  45%;   /* ← breite */
+  height: 45%;   /* ← höhe   */
+}
+
+/* ── STEP 3: Rollenübersicht ───────────────────
+   Hier left / top / width / height anpassen:    */
+.setup-content--step3 {
+  left:   27%;   /* ← links  */
+  top:    22%;   /* ← oben   */
+  width:  45%;   /* ← breite */
+  height: 45%;   /* ← höhe   */
+}
+
+.setup-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 24px;
+  border-top: 1px solid rgba(201,168,76,0.12);
+  background: rgba(3,5,14,0.8);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.setup-back {
+  height: 44px;
+  padding: 0 16px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 6px;
+  color: rgba(169,176,214,0.6);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.setup-back:hover { color: #C9A84C; border-color: rgba(201,168,76,0.5); }
+
+.setup-title {
+  font-size: clamp(12px, 1.6vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #C9A84C;
+  text-shadow: 0 0 20px rgba(201,168,76,0.35);
+}
+
+.setup-progress {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(169,176,214,0.4);
+}
+
+/* ── Steps ── */
+.step { display: none; width: 100%; height: 100%; }
+.step.active { display: flex; flex-direction: column; height: 100%; }
+#step1.active { gap: 8px; }
+
+/* Step 1 (Namen): kein Scroll, Textarea füllt alles */
+#step1 {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Step 2 (Rollen): Header fix, Chips scrollen */
+/* KEIN display:flex – kommt von .step.active */
+#step2 {
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* Step 2: Header fixiert, Chips scrollen */
+.step2-header {
+  flex-shrink: 0;
+  padding: 12px 0 10px;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.step2-chips {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 2px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201,168,76,0.3) transparent;
+}
+.step2-chips::-webkit-scrollbar { width: 4px; }
+.step2-chips::-webkit-scrollbar-thumb {
+  background: rgba(201,168,76,0.3);
+  border-radius: 2px;
+}
+
+/* Step 3 (Übersicht): vertikal scrollbar bei Bedarf */
+#step3 {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Step-Titel ── */
+.step-heading {
+  font-size: clamp(22px, 2.5vw, 28px);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(169,176,214,0.55);
+  text-align: center;
+}
+
+/* ── Counter ── */
+.step-counter {
+  font-size: clamp(22px, 2.5vw, 28px);
+  font-weight: 700;
+  text-align: center;
+  color: #C9A84C;
+}
+.step-counter.warn { color: #ff5d7a; }
+.step-counter.good { color: #43e59b; }
+
+/* ── Textarea (Namen) ── */
+.names-textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(201,168,76,0.3);
+  border-radius: 0;
+  color: #e8ecff;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(20px, 2.2vw, 22px);
+  line-height: 1.8;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.names-textarea:focus { border-bottom-color: rgba(201,168,76,0.65); }
+.names-textarea::placeholder { color: rgba(169,176,214,0.3); }
+
+/* ── Rolle Chips ── */
+.chip-group-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(201,168,76,0.5);
+  margin: 12px 0 6px;
+  width: 100%;
+}
+
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 6px 0 10px;
+  max-width: 100%;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(8px, 0.9vw, 10px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.12s;
+  border-top: 2px solid;
+  border-bottom: 1px solid;
+  border-left: 1px solid;
+  border-right: 1px solid;
+}
+.role-chip-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.role-chip-info {
+  flex-shrink: 0;
+  font-size: 9px;
+  line-height: 1;
+  padding: 1px 3px;
+  opacity: 0.65;
+  color: rgba(201,168,76,0.85);
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+}
+.role-chip:hover .role-chip-info { opacity: 1; }
+.role-chip:active { transform: scale(0.95); }
+
+/* Hover-Tooltip & Info-Popup (wie Spielfeld) */
+.tooltip-role {
+  position: absolute;
+  z-index: 9999;
+  max-width: 360px;
+  background: rgba(0,0,0,0.85);
+  border: 1px solid gold;
+  box-shadow: 0 0 10px rgba(255,215,0,0.6), 0 0 20px rgba(255,215,0,0.25);
+  color: #e8ecff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  white-space: normal;
+  word-wrap: break-word;
+}
+.tooltip-role.show { opacity: 1; }
+#roleInfoPopup {
+  position: fixed;
+  z-index: 10000;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0d1228;
+  border: 1px solid #4a5490;
+  border-radius: 10px;
+  padding: 16px 20px;
+  max-width: min(280px, 85vw);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  pointer-events: auto;
+}
+.rip-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #aabbff;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.rip-desc {
+  font-size: 13px;
+  color: #c8d0f0;
+  line-height: 1.55;
+}
+
+/* Dorfbewohner – Blau */
+.role-chip--villager {
+  background: linear-gradient(180deg, #1a2a4a, #0d1830);
+  border-top-color: #6a9ade;
+  border-bottom-color: #1a3a6a;
+  border-left-color: #2a5a9a;
+  border-right-color: #2a5a9a;
+  color: #8ec4f4;
+}
+/* Wolf – Rot */
+.role-chip--wolf {
+  background: linear-gradient(180deg, #2e1010, #180808);
+  border-top-color: #cc4444;
+  border-bottom-color: #5a1010;
+  border-left-color: #882020;
+  border-right-color: #882020;
+  color: #e89090;
+}
+/* Solo – Lila */
+.role-chip--solo {
+  background: linear-gradient(180deg, #221040, #130828);
+  border-top-color: #9060d8;
+  border-bottom-color: #401880;
+  border-left-color: #602898;
+  border-right-color: #602898;
+  color: #c898f0;
+}
+
+.role-chip.selected { filter: brightness(1.5); }
+.role-chip.disabled { opacity: 0.35; cursor: not-allowed; }
+.role-chip.multi    { box-shadow: 0 0 0 1px rgba(201,168,76,0.4); }
+
+/* ── Übersicht (Step 3) ── */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  min-width: 0;
+}
+
+.overview-col {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* FIX: kein max-height/overflow → keine Scrollbars */
+  min-width: 0;
+  overflow: hidden;
+}
+
+.overview-col-title {
+  font-size: clamp(9px, 1.1vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.overview-col-title--village { color: #8ec4f4; }
+.overview-col-title--wolf    { color: #e89090; }
+.overview-col-title--solo    { color: #c898f0; }
+
+.overview-item {
+  font-size: clamp(9px, 1.1vw, 13px);
+  color: rgba(232,236,255,0.8);
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.overview-item--villager { color: #8ec4f4; }
+.overview-item--wolf     { color: #e89090; }
+.overview-item--solo     { color: #c898f0; }
+.overview-empty {
+  font-size: 11px;
+  color: rgba(169,176,214,0.3);
+  font-style: italic;
+}
+
+/* ── Footer / Aktionen ── */
+.setup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  border-top: 1px solid rgba(201,168,76,0.15);
+  background: rgba(3,5,14,0.75);
+  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+}
+
+.footer-left  { display: flex; gap: 10px; }
+.footer-right { display: flex; gap: 10px; }
+
+.action-btn {
+  height: 48px;
+  padding: 0 20px;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(9px, 1vw, 11px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.action-btn:active { transform: scale(0.97); }
+.action-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+.action-btn--primary {
+  /* Next / Distribute Randomly – transparenter Hintergrund, grüner Schriftzug */
+  background: transparent;
+  border: 1px solid rgba(60,160,90,0.35);
+  color: rgba(120,220,150,0.95);
+  box-shadow: 0 0 10px rgba(60,160,90,0.15);
+}
+.action-btn--secondary {
+  background: rgba(201,168,76,0.07);
+  border: 1px solid rgba(201,168,76,0.28);
+  color: rgba(201,168,76,0.8);
+}
+.action-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(169,176,214,0.15);
+  color: rgba(169,176,214,0.45);
+}
+
+/* ── iPhone Landscape ── */
+@media (max-height: 430px) {
+  .setup-content { top: 12vh; bottom: 35vh; left: 22vw; right: 24vw; padding: 8px 12px; }
+  .setup-header  { padding: 6px 16px; }
+  .setup-footer  { padding: 6px 16px; }
+  .action-btn    { height: 40px; }
+  .overview-grid { gap: 8px; }
+  .overview-col  { padding: 6px 4px; }
+}
+
+/* ── Portrait ── */
+#portraitWarning {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: #05070f;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  text-align: center;
+  font-family: 'Cinzel', serif; color: #a9b0d6;
+}
+@media (orientation: portrait) { #portraitWarning { display: flex; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+}
+
+/* ── Akt-Banner (Step 2) ── */
+.akt-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 6px 0 8px;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  margin-bottom: 6px;
+}
+.akt-banner-title {
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #C9A84C;
+  text-align: center;
+  text-shadow: 0 0 16px rgba(201,168,76,0.3);
+}
+.akt-change-btn {
+  position: absolute;
+  right: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  color: rgba(169,176,214,0.5);
+  padding: 5px 9px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.akt-change-btn:hover { color: #C9A84C; border-color: rgba(201,168,76,0.45); }
+</style>
+
+<script src="js/core/i18n.js"></script>
+<script src="js/core/roles.js"></script>
+<script src="js/core/akte.js"></script>
+<script src="js/core/cards.js"></script>
+<script src="js/core/state.js"></script>
+</head>
+<body>
+
+<div id="portraitWarning">
+  <div style="font-size:40px">🔄</div>
+  <div id="portraitWarnTitle">Bitte Gerät drehen</div>
+  <div id="portraitWarnSub" style="font-size:12px;opacity:0.5">Grimmhain funktioniert nur im Querformat</div>
+</div>
+
+<div class="setup-page">
+
+  <!-- Header -->
+  <header class="setup-header">
+    <button class="setup-back" id="backBtn">← Zurück</button>
+    <div class="setup-title" id="headerTitle">Namen eingeben</div>
+    <div class="setup-progress" id="headerProgress">Schritt 1 / 3</div>
+  </header>
+
+  <!-- Content -->
+  <main class="setup-content">
+
+    <!-- ── Step 1: Namen ── -->
+    <div class="step active" id="step1">
+      <div class="step-heading" id="namesHeading">Spielernamen eingeben</div>
+      <div class="step-counter" id="namesCounter">0 / 12 Namen</div>
+      <textarea
+        class="names-textarea"
+        id="namesInput"
+        placeholder="Thomas, Kevin, Timo, Sarah, Max..."
+        spellcheck="false"
+      ></textarea>
+    </div>
+
+    <!-- ── Step 2: Rollen ── -->
+    <div class="step" id="step2">
+      <div class="step2-header">
+        <div class="akt-banner" id="aktBanner">
+          <div class="akt-banner-title" id="aktBannerTitle"></div>
+          <button class="akt-change-btn" id="aktChangeBtn">← Akt wechseln</button>
+        </div>
+        <div class="step-heading" id="rolesHeading">Rollen auswählen</div>
+        <div class="step-counter" id="rolesCounter">0 / 12 Rollen gewählt</div>
+      </div>
+      <div class="step2-chips" id="chipsContainer"></div>
+    </div>
+
+    <!-- ── Step 3: Übersicht ── -->
+    <div class="step" id="step3">
+      <div class="step-heading" id="overviewHeading">Rollenübersicht</div>
+      <div class="overview-grid">
+        <div class="overview-col">
+          <div class="overview-col-title overview-col-title--village" id="colTitleVillage">Dorfbewohner</div>
+          <div id="overviewVillage"></div>
+        </div>
+        <div class="overview-col">
+          <div class="overview-col-title overview-col-title--wolf" id="colTitleWolf">Werwölfe</div>
+          <div id="overviewWolf"></div>
+        </div>
+        <div class="overview-col">
+          <div class="overview-col-title overview-col-title--solo" id="colTitleSolo">Solo</div>
+          <div id="overviewSolo"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="setup-footer">
+    <div class="footer-left">
+      <button class="action-btn action-btn--ghost" id="clearNamesBtn" style="display:none">Namen leeren</button>
+      <button class="action-btn action-btn--ghost" id="shuffleBtn"    style="display:none">Mischen</button>
+      <button class="action-btn action-btn--ghost" id="resetRolesBtn" style="display:none">Zurücksetzen</button>
+    </div>
+    <div class="footer-right">
+      <button class="action-btn action-btn--secondary" id="selfDistributeBtn" style="display:none">
+        Selber verteilen
+      </button>
+      <button class="action-btn action-btn--primary" id="nextBtn">
+        Weiter →
+      </button>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── FIX: Portrait-Warnung via JS ── */
+  (function() {
+    var warn = document.getElementById('portraitWarning');
+    if (!warn) return;
+    function checkOrientation() {
+      warn.style.display = window.innerHeight > window.innerWidth ? 'flex' : 'none';
+    }
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', function() {
+      setTimeout(checkOrientation, 150);
+    });
+  })();
+
+  var LS_STATE = 'uw_custom_v16';
+  var LS_LANG  = 'grimmhain_lang';
+  var LS_AKT   = 'grimmhain_akt';
+
+  /* ── State laden ── */
+  var appState = null;
+  try { appState = JSON.parse(localStorage.getItem(LS_STATE)); } catch(e) {}
+  if (!appState || !appState.seats) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  var playerCount = appState.seats.length;
+  var currentStep = 1;
+  var selectedRoleCounts = {};
+
+  /* ── Rollen-Sets ── */
+  var WOLF_SET = new Set([
+    "Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf",
+    "Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe",
+    "Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf",
+    "Fenrir","Blutwolf","Albtraumwolf","Cerberus"
+  ]);
+  var SOLO_SET = new Set([
+    "Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs",
+    "Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer"
+  ]);
+
+  /* ── Elemente ── */
+  var step1 = document.getElementById('step1');
+  var step2 = document.getElementById('step2');
+  var step3 = document.getElementById('step3');
+  var namesInput    = document.getElementById('namesInput');
+  var namesCounter  = document.getElementById('namesCounter');
+  var rolesCounter  = document.getElementById('rolesCounter');
+  var chipsContainer = document.getElementById('chipsContainer');
+  var headerTitle   = document.getElementById('headerTitle');
+  var headerProgress = document.getElementById('headerProgress');
+  var backBtn       = document.getElementById('backBtn');
+  var nextBtn       = document.getElementById('nextBtn');
+  var clearNamesBtn = document.getElementById('clearNamesBtn');
+  var shuffleBtn    = document.getElementById('shuffleBtn');
+  var resetRolesBtn = document.getElementById('resetRolesBtn');
+  var selfDistributeBtn = document.getElementById('selfDistributeBtn');
+  var overviewVillage = document.getElementById('overviewVillage');
+  var overviewWolf    = document.getElementById('overviewWolf');
+  var overviewSolo    = document.getElementById('overviewSolo');
+  var namesHeading    = document.getElementById('namesHeading');
+  var rolesHeading    = document.getElementById('rolesHeading');
+  var overviewHeading = document.getElementById('overviewHeading');
+  var colTitleVillage = document.getElementById('colTitleVillage');
+  var colTitleWolf    = document.getElementById('colTitleWolf');
+  var colTitleSolo    = document.getElementById('colTitleSolo');
+  var portraitWarnTitle = document.getElementById('portraitWarnTitle');
+  var portraitWarnSub   = document.getElementById('portraitWarnSub');
+  var aktBannerTitle = document.getElementById('aktBannerTitle');
+  var aktChangeBtn   = document.getElementById('aktChangeBtn');
+
+  function applySetupI18n(isDE) {
+    if (portraitWarnTitle) portraitWarnTitle.textContent = isDE ? 'Bitte Gerät drehen' : 'Please rotate your device';
+    if (portraitWarnSub) portraitWarnSub.textContent = isDE ? 'Grimmhain funktioniert nur im Querformat' : 'Grimmhain works in landscape mode only';
+    document.title = isDE ? 'Grimmhain – Setup' : 'Grimmhain – Game setup';
+    if (namesHeading) namesHeading.textContent = isDE ? 'Spielernamen eingeben' : 'Enter player names';
+    if (rolesHeading) rolesHeading.textContent = isDE ? 'Rollen auswählen' : 'Choose roles';
+    if (overviewHeading) overviewHeading.textContent = isDE ? 'Rollenübersicht' : 'Role overview';
+    if (colTitleVillage) colTitleVillage.textContent = isDE ? 'Dorfbewohner' : 'Villagers';
+    if (colTitleWolf) colTitleWolf.textContent = isDE ? 'Werwölfe' : 'Werewolves';
+    if (colTitleSolo) colTitleSolo.textContent = 'Solo';
+    namesInput.placeholder = isDE ? 'Thomas, Kevin, Timo, Sarah, Max...' : 'Thomas, Kevin, Tim, Sarah, Max...';
+    clearNamesBtn.textContent = isDE ? 'Namen leeren' : 'Clear names';
+    shuffleBtn.textContent = isDE ? 'Mischen' : 'Shuffle';
+    resetRolesBtn.textContent = isDE ? 'Zurücksetzen' : 'Reset';
+    selfDistributeBtn.textContent = isDE ? 'Selber verteilen' : 'Assign manually';
+    if (aktChangeBtn) aktChangeBtn.textContent = isDE ? '← Akt wechseln' : '← Change Act';
+  }
+
+  /* ── Akt-Banner aktualisieren ── */
+  function updateAktBanner() {
+    var aktId = 'akt1';
+    try { aktId = localStorage.getItem(LS_AKT) || 'akt1'; } catch(e) {}
+    var lang = localStorage.getItem(LS_LANG) || 'de';
+    if (aktBannerTitle) aktBannerTitle.textContent = (typeof getAktName === 'function')
+      ? getAktName(aktId, lang) : aktId;
+  }
+
+  /* ── Hilfsfunktionen ── */
+  function getNames() {
+    return (namesInput.value || '').split(',')
+      .map(function(n) { return n.trim(); })
+      .filter(Boolean);
+  }
+
+  function getTotalSelected() {
+    return Object.values(selectedRoleCounts).reduce(function(s,n){ return s+n; }, 0);
+  }
+
+  function getRoleMax(role) {
+    if (role === 'Werwolf') return 5;
+    if (role === 'Dorfbewohner') return 10;
+    return 1;
+  }
+
+  function getFaction(role) {
+    if (WOLF_SET.has(role)) return 'wolf';
+    if (SOLO_SET.has(role)) return 'solo';
+    return 'villager';
+  }
+
+  /* ── Step-UI ── */
+  var setupContent = document.querySelector('.setup-content');
+
+  function showStep(n) {
+    currentStep = n;
+    step1.classList.toggle('active', n === 1);
+    step2.classList.toggle('active', n === 2);
+    step3.classList.toggle('active', n === 3);
+    /* Per-Step Positionierung */
+    setupContent.classList.remove('setup-content--step1','setup-content--step2','setup-content--step3');
+    setupContent.classList.add('setup-content--step' + n);
+
+    var lang = localStorage.getItem(LS_LANG) || 'de';
+    var isDE = lang === 'de';
+
+    applySetupI18n(isDE);
+    if (n === 2) updateAktBanner();
+
+    var titles = isDE
+      ? ['Namen eingeben', 'Rollen wählen', 'Übersicht']
+      : ['Enter Names', 'Choose Roles', 'Overview'];
+
+    headerTitle.textContent   = titles[n - 1];
+    headerProgress.textContent = (isDE ? 'Schritt ' : 'Step ') + n + ' / 3';
+
+    /* Buttons */
+    clearNamesBtn.style.display    = n === 1 ? '' : 'none';
+    shuffleBtn.style.display       = n === 1 ? '' : 'none';
+    resetRolesBtn.style.display    = n === 2 ? '' : 'none';
+    selfDistributeBtn.style.display = n === 3 ? '' : 'none';
+
+    if (n === 1) {
+      nextBtn.textContent = isDE ? 'Weiter →' : 'Next →';
+      backBtn.textContent = isDE ? '← Zurück' : '← Back';
+    } else if (n === 2) {
+      nextBtn.textContent = isDE ? 'Weiter →' : 'Next →';
+      backBtn.textContent = isDE ? '← Zurück' : '← Back';
+    } else {
+      nextBtn.textContent = isDE ? '🎲 Zufällig verteilen' : '🎲 Distribute Randomly';
+      backBtn.textContent = isDE ? '← Zurück' : '← Back';
+    }
+
+    updateNextBtn();
+  }
+
+  function updateNextBtn() {
+    if (currentStep === 1) {
+      nextBtn.disabled = getNames().length !== playerCount;
+    } else if (currentStep === 2) {
+      nextBtn.disabled = getTotalSelected() !== playerCount;
+    } else {
+      nextBtn.disabled = false;
+    }
+  }
+
+  /* ── Step 1: Namen-Counter ── */
+  function updateNamesCounter() {
+    var names = getNames();
+    var count = names.length;
+    var isDE  = (localStorage.getItem(LS_LANG) || 'de') === 'de';
+    namesCounter.textContent = count + ' / ' + playerCount + (isDE ? ' Namen' : ' Names');
+    namesCounter.className   = 'step-counter' + (count === playerCount ? ' good' : count > 0 ? ' warn' : '');
+    updateNextBtn();
+  }
+
+  /* ── Step 2: Chips rendern ── */
+  function renderChips() {
+    chipsContainer.innerHTML = '';
+    var ALL = typeof ALL_ROLES !== 'undefined' ? ALL_ROLES : [];
+    var aktId = 'akt1';
+    try { aktId = localStorage.getItem(LS_AKT) || 'akt1'; } catch(e) {}
+    var allowedRoles = (typeof getAktRollen === 'function') ? getAktRollen(aktId) : ALL;
+    var allowedSet = new Set(allowedRoles);
+    var villagers = [], wolves = [], solos = [];
+    ALL.forEach(function(r) {
+      if (!allowedSet.has(r)) return;
+      var f = getFaction(r);
+      if (f === 'wolf') wolves.push(r);
+      else if (f === 'solo') solos.push(r);
+      else villagers.push(r);
+    });
+
+    var lang  = localStorage.getItem(LS_LANG) || 'de';
+    var groups = [
+      { label: lang === 'de' ? 'Dorfbewohner' : 'Villagers',  cls: 'villager', roles: villagers },
+      { label: lang === 'de' ? 'Werwölfe'     : 'Werewolves', cls: 'wolf',     roles: wolves },
+      { label: lang === 'de' ? 'Solo-Rollen'  : 'Solo Roles', cls: 'solo',     roles: solos }
+    ];
+
+    var total = getTotalSelected();
+
+    groups.forEach(function(grp) {
+      var lbl = document.createElement('div');
+      lbl.className   = 'chip-group-label';
+      lbl.textContent = grp.label;
+      chipsContainer.appendChild(lbl);
+
+      var wrap = document.createElement('div');
+      wrap.className = 'chips-wrap';
+
+      grp.roles.forEach(function(role) {
+        var cnt  = selectedRoleCounts[role] || 0;
+        var chip = document.createElement('span');
+        chip.className = 'role-chip role-chip--' + grp.cls
+          + (cnt > 0 ? ' selected' : '')
+          + (cnt > 1 ? ' multi' : '')
+          + (cnt === 0 && total >= playerCount ? ' disabled' : '');
+        chip.dataset.role = role;
+
+        var displayName = (window.getRoleName ? window.getRoleName(role) : role);
+        var label = document.createElement('span');
+        label.className = 'role-chip-label';
+        label.textContent = cnt > 1 ? displayName + ' ×' + cnt : displayName;
+        var info = document.createElement('span');
+        info.className = 'role-chip-info';
+        info.setAttribute('role', 'button');
+        info.setAttribute('aria-label', 'Info');
+        info.textContent = '?';
+        chip.appendChild(label);
+        chip.appendChild(info);
+
+        chip.addEventListener('click', function(e) {
+          if (e.target && e.target.closest && e.target.closest('.role-chip-info')) return;
+          var cur = selectedRoleCounts[role] || 0;
+          var max = getRoleMax(role);
+          var tot = getTotalSelected();
+          var next = cur + 1;
+          if (next > max) next = 0;
+          if (next > cur && tot >= playerCount) return;
+          if (next === 0) delete selectedRoleCounts[role];
+          else selectedRoleCounts[role] = next;
+          renderChips();
+          updateRolesCounter();
+        });
+        info.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var desc = window.getRoleDescription
+            ? window.getRoleDescription(role)
+            : (window.ROLE_DESCRIPTIONS && window.ROLE_DESCRIPTIONS[role]) || '—';
+          var title = window.getRoleName ? window.getRoleName(role) : role;
+          if (window.showRoleInfoPopup) window.showRoleInfoPopup(title, desc);
+        });
+        if (window.attachRoleHoverTooltip) window.attachRoleHoverTooltip(chip);
+
+        wrap.appendChild(chip);
+      });
+
+      chipsContainer.appendChild(wrap);
+    });
+  }
+
+  function updateRolesCounter() {
+    var total = getTotalSelected();
+    var lang  = localStorage.getItem(LS_LANG) || 'de';
+    var isDE  = lang === 'de';
+    rolesCounter.textContent = total + ' / ' + playerCount + (isDE ? ' Rollen gewählt' : ' roles selected');
+    rolesCounter.className   = 'step-counter' + (total === playerCount ? ' good' : total > 0 ? ' warn' : '');
+    updateNextBtn();
+  }
+
+  /* ── Step 3: Übersicht ── */
+  function renderOverview() {
+    var villagers = [], wolves = [], solos = [];
+    Object.keys(selectedRoleCounts).forEach(function(role) {
+      var cnt = selectedRoleCounts[role] || 0;
+      for (var i = 0; i < cnt; i++) {
+        var f = getFaction(role);
+        var name = window.getRoleName ? window.getRoleName(role) : role;
+        if (f === 'wolf') wolves.push(name);
+        else if (f === 'solo') solos.push(name);
+        else villagers.push(name);
+      }
+    });
+
+    function fill(el, arr, colorCls) {
+      el.innerHTML = '';
+      if (!arr.length) {
+        var empty = document.createElement('div');
+        empty.className   = 'overview-empty';
+        empty.textContent = '—';
+        el.appendChild(empty);
+        return;
+      }
+      arr.forEach(function(name) {
+        var item = document.createElement('div');
+        item.className   = 'overview-item ' + (colorCls || '');
+        item.textContent = name;
+        el.appendChild(item);
+      });
+    }
+
+    fill(overviewVillage, villagers, 'overview-item--villager');
+    fill(overviewWolf,    wolves,    'overview-item--wolf');
+    fill(overviewSolo,    solos,     'overview-item--solo');
+  }
+
+  /* ── Navigation ── */
+  backBtn.addEventListener('click', function() {
+    if (currentStep === 1) {
+      window.location.href = 'index.html';
+    } else {
+      showStep(currentStep - 1);
+      if (currentStep === 2) renderChips();
+    }
+  });
+
+  nextBtn.addEventListener('click', function() {
+    if (currentStep === 1) {
+      /* Namen in State speichern */
+      var names = getNames();
+      names.forEach(function(name, i) {
+        if (appState.seats[i]) appState.seats[i].name = name;
+      });
+      try { localStorage.setItem(LS_STATE, JSON.stringify(appState)); } catch(e) {}
+      showStep(2);
+      renderChips();
+      updateRolesCounter();
+
+    } else if (currentStep === 2) {
+      showStep(3);
+      renderOverview();
+
+    } else {
+      /* Zufällig verteilen → game.html */
+      distributeAndGo(true);
+    }
+  });
+
+  /* ── Hilfs-Buttons ── */
+  clearNamesBtn.addEventListener('click', function() {
+    namesInput.value = '';
+    updateNamesCounter();
+  });
+
+  shuffleBtn.addEventListener('click', function() {
+    var names = getNames();
+    for (var i = names.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = names[i]; names[i] = names[j]; names[j] = t;
+    }
+    namesInput.value = names.join(', ');
+    updateNamesCounter();
+  });
+
+  resetRolesBtn.addEventListener('click', function() {
+    selectedRoleCounts = {};
+    renderChips();
+    updateRolesCounter();
+  });
+
+  if (aktChangeBtn) {
+    aktChangeBtn.addEventListener('click', function() {
+      window.location.href = 'index.html';
+    });
+  }
+
+  selfDistributeBtn.addEventListener('click', function() {
+    distributeAndGo(false);
+  });
+
+  /* ── Verteilen & Navigieren ── */
+  function distributeAndGo(random) {
+    var roles = [];
+    Object.keys(selectedRoleCounts).forEach(function(role) {
+      var cnt = selectedRoleCounts[role] || 0;
+      for (var i = 0; i < cnt; i++) roles.push(role);
+    });
+
+    if (random) {
+      for (var i = roles.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = roles[i]; roles[i] = roles[j]; roles[j] = t;
+      }
+    }
+
+    /* Frischer State */
+    var fresh = typeof createState === 'function'
+      ? createState(appState.seats.length)
+      : { seats: appState.seats.slice(), once: {}, dark: false, nightCount: 1,
+          layout: appState.layout || {scale:100,ratio:120,offx:0,offy:0},
+          files: appState.files  || {night:null,nightPos:0,alarm:null},
+          font: appState.font || 'fell', ui: {}, pending: {} };
+
+    fresh.layout = Object.assign({}, appState.layout || {}, fresh.layout || {});
+    fresh.files  = Object.assign({}, appState.files  || {}, fresh.files  || {});
+    fresh.font   = appState.font || 'fell';
+
+    appState.seats.forEach(function(s, i) {
+      if (!fresh.seats[i]) return;
+      fresh.seats[i].name = s.name || '';
+      if (random) {
+        fresh.seats[i].role = roles[i] || '';
+        var r = fresh.seats[i].role;
+        fresh.seats[i].flags = fresh.seats[i].flags || {};
+        fresh.seats[i].flags.werewolf =
+          /wolf/i.test(r) ||
+          r === 'Schattenhund' ||
+          r === 'König Lykaon' ||
+          r === 'Schattenwanderer' ||
+          r === 'Schwarze Witwe';
+      }
+    });
+
+    fresh.dark       = !random; /* Selber verteilen → Nacht, Zufällig → auch Nacht */
+    fresh.dark       = true;
+    fresh.nightCount = 1;
+
+    if (typeof assignTotenkarten === 'function') {
+      try { assignTotenkarten.call({ state: fresh }); } catch(e) {}
+    }
+
+    try { localStorage.setItem(LS_STATE, JSON.stringify(fresh)); } catch(e) {}
+    window.location.href = 'game.html';
+  }
+
+  /* ── Textarea-Listener ── */
+  namesInput.addEventListener('input', updateNamesCounter);
+
+  /* ── Init ── */
+  (function init() {
+    /* Namen aus State vorbelegen */
+    var existingNames = appState.seats
+      .map(function(s) { return (s.name || '').trim(); })
+      .filter(Boolean);
+    if (existingNames.length) {
+      namesInput.value = existingNames.join(', ');
+    }
+
+    showStep(1);
+    updateNamesCounter();
+  })();
+
+})();
+</script>
+
+</body>
+</html>

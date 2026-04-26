@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(mkdir -p /c/Users/Marku/Desktop/Werwolf/grimmhain-website/src/app/[locale]/rollen)",
+      "Bash(mkdir -p /c/Users/Marku/Desktop/Werwolf/grimmhain-website/src/app/[locale]/forum)",
+      "Bash(mkdir -p /c/Users/Marku/Desktop/Werwolf/grimmhain-website/src/app/[locale]/shop/success)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e \"const s = require\\(''''/c/Users/Marku/Desktop/Werwolf/grimmhain-website/node_modules/stripe''''\\); console.log\\(Object.keys\\(s.LATEST_API_VERSION || s.default?.LATEST_API_VERSION || {}\\).slice\\(0,1\\)\\); \")",
+      "Bash(npm run:*)",
+      "Bash(node:*)",
+      "Bash(find C:/Users/Marku/Desktop/Werwolf/grimmhain-website/src -name *.tsx -o -name *.ts)",
+      "WebFetch(domain:www.leagueoflegends.com)",
+      "WebFetch(domain:www.diablo4.com)",
+      "WebFetch(domain:www.warhammer-community.com)",
+      "WebFetch(domain:bloodborne.fandom.com)",
+      "WebFetch(domain:diablo4.blizzard.com)",
+      "WebFetch(domain:www.pathofexile.com)",
+      "Bash(rm -rf \"/c/Users/Marku/Desktop/Werwolf/grimmhain-website/src/app/[locale]/forum/[id]\")",
+      "Bash(mkdir -p \"/c/Users/Marku/Desktop/Werwolf/grimmhain-website/src/app/[locale]/forum/[category]/[id]\")",
+      "Bash(cursor --version)",
+      "Bash(cursor:*)"
+    ]
+  }
+}

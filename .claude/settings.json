@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "WebFetch",
+      "mcp__puppeteer",
+      "mcp__puppeteer__*"
+    ],
+    "deny": [
+      "Bash(rm -rf ~/)",
+      "Bash(rm -rf /*)",
+      "Read(../)",
+      "Edit(../)"
+    ]
+  }
+}

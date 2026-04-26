@@ -1,0 +1,2421 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<script>
+/* Bei file:// keine Google-Fonts/preconnect laden — Chrome meldet sonst oft:
+   „Unsafe attempt to load URL file:///…/index.html from frame…“ (eigene Origin pro file-URL). */
+(function () {
+  var p = location.protocol;
+  if (p === 'http:' || p === 'https:') {
+    document.write(
+      '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
+      '<link rel="preconnect" href="https://fonts.googleapis.com">' +
+      '<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;800&family=Fondamento&display=swap" rel="stylesheet">'
+    );
+  }
+  if (p === 'file:') {
+    document.documentElement.classList.add('grimm-file-protocol');
+  }
+})();
+</script>
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/tokens.css">
+<script src="js/core/i18n.js"></script>
+<script src="js/core/roles.js"></script>
+<script src="js/core/cards.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/ui/core.js"></script>
+<script src="js/ui/audio.js"></script>
+<script src="js/ui/ui.js"></script>
+<script src="js/core/abilities-helpers.js"></script>
+<script src="js/core/abilities-roles-chunk.js"></script>
+<script src="js/core/abilities.js"></script>
+<script src="js/core/night.js"></script>
+<script src="js/ui/gamelog.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Grimmhain – Spielfeld</title>
+<script>
+if(location.protocol==='http:' || location.protocol==='https:'){
+  document.write('<link rel="manifest" href="manifest.json">');
+}
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grimmhain">
+<meta name="theme-color" content="#08060e">
+<link rel="apple-touch-icon" href="assets/icons/app/apple-touch-icon.png">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="app-mode-game">
+
+<div id="bg-effects" class="bg-effects" aria-hidden="true">
+  <div class="fog-layer fog-layer-1"></div>
+  <div class="fog-layer fog-layer-2"></div>
+  <div class="fire-glow" id="fireGlow"></div>
+</div>
+
+<div class="wrap">
+<aside class="side">
+  <h1>Grimmhain – Werwolf Reckoning</h1>
+<div style='height:8px'></div>
+<div id='phaseCounter' class='phase-counter'></div>
+  <div class="row"><label data-i18n="players">Spieler</label><input id="count" type="number" min="4" max="40" value="12"><button class="btn" id="applyCount" data-i18n="buildCircle">Sitzkreis bauen</button></div>
+  <div class="row"><button id="langToggleBtn" class="btn sm" onclick="setLang(localStorage.getItem('grimmhain_lang')==='de'?'en':'de')">DE</button><button class="btn" id="setupBtn" title="Namen &amp; Rollen schnell einrichten" data-i18n-title="setupQuickTitle" data-i18n="setup">⚙ Setup</button><button class="btn" id="showRolesBtn" title="Rollen geheim nacheinander anzeigen" data-i18n-title="showRolesTitle" data-i18n="showRoles">🎭 Rollen zeigen</button></div>
+  <div class="row ctrl"><label data-i18n="circleSize">Kreisgröße</label><input id="scale" type="range" min="60" max="130" value="100"><span id="scaleVal">100%</span></div>
+  <div class="row ctrl"><label data-i18n="width">Breite</label><input id="ratio" type="range" min="80" max="170" value="120"><span id="ratioVal">120%</span></div>
+  <div class="row ctrl"><label data-i18n="offsetX">Offset X</label><input id="offx" type="range" min="-180" max="180" value="0"><span id="offxVal">0px</span></div>
+  <div class="row ctrl"><label data-i18n="offsetY">Offset Y</label><input id="offy" type="range" min="-180" max="180" value="0"><span id="offyVal">0px</span></div>
+  <div class="row"><button class="btn sm" id="fitBtn" data-i18n="autoFit">Auto-Fit</button></div>
+  <div class="row"><button class="btn good primary" id="startNight" data-i18n="startNight">Nacht starten</button><button class="btn primary" id="startDay" data-i18n="startDay">Tag starten</button></div>
+  <div class="row">
+    <button class="btn sm" id="undoBtn" title="Bis zu 5 Schritte zurück" data-i18n-title="undoTitle" data-i18n="undo">↩ Undo</button>
+    <button class="btn warn sm" id="clearRolesBtn" title="Alle Rollen leeren, Namen behalten, neue Runde (Tag 1)" data-i18n-title="clearRolesTitle" data-i18n="clearRoles">Rollen leeren</button>
+    <button class="btn sm" id="logBtn" data-i18n="log">📜 Log</button>
+  </div>
+  <div class="row"><button class="btn sm" id="totenratRevealBtn" style="display:none" title="Totenrat-Führer: Übungs-Enthüllung aller lebenden Wölfe" data-i18n-title="revealWolvesTitle" data-i18n="revealWolves">🦴 Wölfe enthüllen</button><button class="btn sm good" id="totenratNameWolfBtn" style="display:none" title="Totenrat-Führer: Werwolf benennen (Sieg)" data-i18n-title="totenratNameWolfTitle" data-i18n="totenratNameWolf">🐺 Wolf benennen</button></div>
+  <div class="row"><button class="btn sm" id="collapseAllBtn" title="Beide Panels einklappen" data-i18n-title="panelsCloseTitle" data-i18n="panelsClose">Panels zu</button><button class="btn sm" id="expandAllBtn" title="Beide Panels ausklappen" data-i18n-title="panelsOpenTitle" data-i18n="panelsOpen">Panels auf</button></div>
+  <div class="row"><div class="file"><button class="btn" id="nightFileBtn" data-i18n="chooseNightMusic">Nachtmusik wählen</button><input id="nightFile" type="file" accept="audio/*"></div></div>
+  <div class="row"><label data-i18n="timer">Timer</label><input id="timerIn" value="02:00"><button class="btn sm" id="tStart" data-i18n="timerStart">Start</button><button class="btn sm" id="tPause" data-i18n="timerPause">Pause</button><button class="btn sm" id="tReset" data-i18n="timerReset">Reset</button>  <button id="tSound" class="btn sm" title="Timersound auswählen" data-i18n-title="timerSound">🔔</button></div>
+  <div class="row"><div class="file"><button class="btn" data-i18n="alarmMp3">Alarm MP3</button><input id="alarmFile" type="file" accept="audio/*"></div><label><input id="alarmLoop" type="checkbox"><span data-i18n="loop">loop</span></label></div>
+  <div class="row"><label data-i18n="volume">Lautstärke</label><input id="alarmVol" type="range" min="0" max="1" step="0.05" value="1"></div>
+<script>
+(function(){
+  function init(){
+    var wrap = document.querySelector('.wrap');
+    if(!wrap) return;
+    var sideToggle = document.getElementById('sideToggle');
+    var orderToggle = document.getElementById('orderToggle');
+    var collapseAll = document.getElementById('collapseAllBtn');
+    var expandAll = document.getElementById('expandAllBtn');
+
+    try{
+      if(localStorage.getItem('uw_side_collapsed') === '1') wrap.classList.add('side-collapsed');
+      if(localStorage.getItem('uw_order_collapsed') === '1') wrap.classList.add('order-collapsed');
+    }catch(e){}
+
+    function sync(){
+      try{
+        localStorage.setItem('uw_side_collapsed', wrap.classList.contains('side-collapsed') ? '1' : '0');
+        localStorage.setItem('uw_order_collapsed', wrap.classList.contains('order-collapsed') ? '1' : '0');
+      }catch(e){}
+    }
+
+    function requestAutoFit(){
+      if(typeof autoFit === 'function'){
+        setTimeout(function(){ try{ autoFit(); }catch(e){} },0);
+      }else if(typeof draw === 'function'){
+        setTimeout(function(){ try{ draw(); }catch(e){} },0);
+      }
+    }
+
+    // initial layout after restoring state
+    requestAutoFit();
+
+    if(sideToggle){
+      sideToggle.addEventListener('click', function(){
+        wrap.classList.toggle('side-collapsed');
+        sync();
+        requestAutoFit();
+      });
+    }
+    if(orderToggle){
+      orderToggle.addEventListener('click', function(){
+        wrap.classList.toggle('order-collapsed');
+        sync();
+        requestAutoFit();
+      });
+    }
+    if(collapseAll){
+      collapseAll.addEventListener('click', function(){
+        wrap.classList.add('side-collapsed','order-collapsed');
+        sync();
+        requestAutoFit();
+      });
+    }
+    if(expandAll){
+      expandAll.addEventListener('click', function(){
+        wrap.classList.remove('side-collapsed','order-collapsed');
+        sync();
+        requestAutoFit();
+      });
+    }
+
+    // respond to window resizes as well
+    window.addEventListener('resize', requestAutoFit);
+  }
+  if(document.readyState==='complete'||document.readyState==='interactive') setTimeout(init,0);
+  else document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+<script>
+window.addEventListener("load", () => {
+  const $ = id => document.getElementById(id);
+  const lynchBtn = $("lynchBtn");
+  if (!lynchBtn) return;
+  lynchBtn.onclick = () => doLynchFlow();
+});
+
+
+</script>
+
+</aside>
+<div id="sideToggle" class="side-toggle" title="Steuerpanel ein-/ausblenden" data-i18n-title="toggleControlPanel"><span class="arrow">◀</span></div>
+<section class="order night-order-wrap">
+  <h2 class="night-order-header" data-i18n="nightOrder">Night Order</h2>
+  <div class="bar">
+    <button class="btn" id="resetNight" data-i18n="reset">Reset</button>
+    <button class="btn" id="resetOnce" data-i18n="onceReset">1× Reset</button>
+    <button type="button" class="btn sm" id="phaseNightOrderBtn" data-i18n-title="startNight" data-i18n-aria-label="startNight">🌙</button>
+    <button type="button" class="btn sm" id="phaseDayOrderBtn" data-i18n-title="startDay" data-i18n-aria-label="startDay">☀️</button>
+  </div>
+  <div class="bar" style="margin-top:6px">
+    <button class="btn sm" id="assistToggle" data-on="false" data-i18n="slAssistantOff">🔴 SL-Assistent: Aus</button>
+  </div>
+  <div id="assistBar" style="display:none">
+    <button class="btn sm good" id="assistWeiter" data-i18n="next">Weiter →</button>
+    <button class="btn sm warn" id="assistPause" data-i18n="pause">⏸ Pause</button>
+    <button class="btn sm" id="assistManual" data-i18n="manual">✋ Ab hier manuell</button>
+  </div>
+  <div id="order" class="night-order-list"></div>
+</section>
+<div id="orderToggle" class="order-toggle" title="Night Order ein-/ausblenden" data-i18n-title="toggleNightOrder"><span class="arrow">▶</span></div>
+<main class="stage">
+<div id="pickbar" class="pickbar"><span class="t" id="picktxt">Pick</span><span class="mini" id="pickhint"></span><button class="btn bad" id="pickcancel" data-i18n="cancel">Abbrechen</button></div>
+  <svg id="stage" preserveAspectRatio="none"></svg>
+  <div class="lynch-phase-wrap" id="lynchPhaseWrap">
+    <button id="lynchBtn" class="btn lynch-float" title="Lynch" aria-label="Lynch" style="display:none;">Lynch</button>
+  </div>
+</main>
+</div>
+
+<div id="gameGearWrap" class="game-gear-wrap">
+  <button id="gameGearBtn" class="btn sm" title="Options">⚙</button>
+  <div id="gameGearPanel" class="game-gear-panel" style="display:none;">
+    <div class="game-gear-title" data-i18n="options">Options</div>
+    <div class="game-gear-row">
+      <label for="gameScale" data-i18n="circleSize">Kreisgröße</label>
+      <input id="gameScale" type="range" min="60" max="130" value="100">
+    </div>
+    <div class="game-gear-row">
+      <label for="gameRatio" data-i18n="width">Breite</label>
+      <input id="gameRatio" type="range" min="80" max="170" value="120">
+    </div>
+    <div class="game-gear-row game-gear-actions">
+      <button class="btn sm" id="gameAutoFitBtn" data-i18n="autoFit">Auto-Fit</button>
+      <button class="btn sm" id="gameUndoBtn" data-i18n="undo">↩ Undo</button>
+      <button class="btn sm" id="gameShowRolesBtn" data-i18n="showRoles">🎭 Show Roles</button>
+    </div>
+    <div class="game-gear-row game-gear-actions">
+      <button class="btn sm warn" id="gameClearRolesBtn" data-i18n="clearRoles">Rollen leeren</button>
+      <button class="btn sm" id="gameAddSeatBtn" data-i18n="addSeat">+ Sitzkreis</button>
+    </div>
+    <div class="game-gear-row game-gear-actions">
+      <button class="btn sm" id="gameTimerDownBtn">▼</button>
+      <button class="btn sm" id="gameTimerUpBtn">▲</button>
+      <button class="btn sm" id="gameTimerStartBtn" data-i18n="timerStart">Start</button>
+      <button class="btn sm" id="gameTimerResetBtn" data-i18n="timerReset">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div id="pop" class="popover">
+  <!-- Header: Sitz-Nr + Schließen -->
+  <div class="pop-header">
+    <span class="pop-title"><span data-i18n="seat">Sitz</span> <span id="pnum"></span></span>
+    <button class="btn pop-close" id="pclose">✕</button>
+  </div>
+
+  <!-- Identity: Name + Rolle -->
+  <div class="pop-identity">
+    <div class="pill"><span>👤</span><input id="pname" placeholder="Name" data-i18n-placeholder="name"></div>
+    <div class="pill"><span>🎭</span><input id="prole" list="roleList" placeholder="Rolle" data-i18n-placeholder="role"></div>
+  </div>
+  <datalist id="roleList"></datalist>
+
+  <!-- Flags in 4 Gruppen -->
+  <div class="pop-flags">
+
+    <div class="flag-group">
+      <div class="flag-group-label">Status</div>
+      <div class="flag-chips">
+        <div class="chip chip--dead"      data-flag="dead" data-i18n="dead">☠ tot</div>
+        <div class="chip chip--protected" data-flag="protected" data-i18n="protected">🛡 geschützt</div>
+        <div class="chip chip--nominated" data-flag="nominated" data-i18n="nominated">⚖ nominiert</div>
+        <div class="chip" data-flag="deadVoteStripped" data-i18n="deadVoteStripped">🚫 Stimme entzogen</div>
+      </div>
+    </div>
+
+    <div class="flag-group">
+      <div class="flag-group-label" data-i18n="nightEffects">Nacht-Effekte</div>
+      <div class="flag-chips">
+        <div class="chip" data-flag="targeted" data-i18n="targeted">🎯 anvisiert</div>
+        <div class="chip" data-flag="poisoned" data-i18n="poisoned">☣ vergiftet</div>
+        <div class="chip" data-flag="burned" data-i18n="burned">🔥 gebrannt</div>
+        <div class="chip" data-flag="charmed" data-i18n="charmed">✨ verzaubert</div>
+      </div>
+    </div>
+
+    <div class="flag-group">
+      <div class="flag-group-label">Sozial</div>
+      <div class="flag-chips">
+        <div class="chip" data-flag="inlove" data-i18n="inlove">❤ verliebt</div>
+        <div class="chip" data-flag="rival" data-i18n="rival">💔 Hass</div>
+        <div class="chip" data-flag="puppet" data-i18n="puppet">🧸 Puppe</div>
+        <div class="chip" data-flag="vorbild" data-i18n="vorbild">🧟 Vorbild</div>
+      </div>
+    </div>
+
+    <div class="flag-group">
+      <div class="flag-group-label">Fraktion</div>
+      <div class="flag-chips">
+        <div class="chip chip--wolf"  data-flag="werewolf" data-i18n="werewolf">🐺 Werwolf</div>
+        <div class="chip chip--mark"  data-flag="hmark" data-i18n="hmark">🪃 Henker-Ziel</div>
+      </div>
+    </div>
+
+  </div><!-- /pop-flags -->
+
+  <!-- Footer -->
+  <div class="pop-footer">
+    <button class="btn" id="pclear" data-i18n="clear">Leeren</button>
+    <button class="btn good" id="psave" data-i18n="apply">Übernehmen</button>
+  </div>
+</div>
+<div id="overlay" class="overlay"><div class="modal"><h3 id="mt">Info</h3><div id="mb" class="big">—</div>
+<div id="mbtns" class="bar2"></div></div></div>
+
+
+<div id="privateRoleOverlay">
+  <div class="private-role-content-wrap">
+    <div id="privateRoleSeat" style="font-size:24px;font-weight:700;color:#C9A84C;margin-bottom:16px;text-align:center;"></div>
+    <div id="privateRoleContent" style="text-align:center;max-width:95%;display:flex;flex-direction:column;align-items:center;">
+      <img id="privateRoleCardImg" src="" alt="" class="private-role-card-img" />
+      <div id="privateRoleName" style="font-size:18px;font-weight:700;color:#C9A84C;margin-top:10px;"></div>
+      <div id="privateRoleDesc" style="font-size:13px;line-height:1.4;color:#e8ecff;margin-top:6px;max-width:500px;display:none;"></div>
+    </div>
+  </div>
+  <button type="button" id="privateRoleNextBtn" class="private-role-next-btn" data-i18n="roleRevealNext">Weiter →</button>
+</div>
+
+<div id="flash" class="flash"><div id="flashSym" class="sym">✅</div></div>
+
+
+<script>
+const $=id=>document.getElementById(id)
+const stage=$("stage")
+let state=migrateState(load());
+if(!state.nightCount) state.nightCount=1;
+ensureTotenkarten();
+
+// ---- Migration & helpers ----
+
+// Rachsüchtiger Wolf hat keine „Mit-in-den-Tod-Reißen“-Fähigkeit beim Lynch (das ist der Besessener Wolf).
+
+// --- Hunter (Sensenträger) queue: trigger on next Day ---
+
+let pickMode=null,currentSeat=null
+var bgImgs={day:null,night:null}
+function tryLoad(src,cb){var i=new Image();i.onload=function(){cb(src)};i.onerror=function(){cb(null)};i.src=src}
+
+// 50 neutrale deutsche Test-Namen
+const __RANDOM_NAMES__=["Lena","Mila","Hannah","Ida","Emma","Ella","Mia","Nora","Lia","Lina","Ben","Lukas","Finn","Leon","Noah","Max","Paul","Mats","Tom","Liam","Frida","Sophia","Mira","Lea","Lotta","Amelie","Juna","Emilia","Greta","Lara","Emil","Jakob","Felix","Theo","Jonas","Oskar","Elias","Henry","Mika","Moritz","Sarah","Kira","Jana","Eva","Marlene","Tessa","Zoe","Clara","Paula","Romy"];
+function assignRandomSeatNames(){
+  try{
+    if(!state||!state.seats) return;
+    const pool=__RANDOM_NAMES__.slice();
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    const used=new Set(); let idx=0;
+    state.seats.forEach(s=>{const nm=(s.name||"").trim(); if(nm===""||/^frei$/i.test(nm)){let cand=pool[idx%pool.length]; let c=2; while(used.has(cand)){cand=pool[idx%pool.length]+" "+(c++);} s.name=cand; used.add(cand); idx++;} else { used.add(nm); }});
+  }catch(e){}
+}
+function initBackgrounds(cb){tryLoad("assets/Tag.png",d=>{bgImgs.day=d;tryLoad("assets/Nacht.png",n=>{bgImgs.night=n;cb&&cb()})})}
+function clamp(a,min,max){return Math.max(min,Math.min(max,a))}
+function wireSfx(id,key){$(id).onchange=e=>{const f=e.target.files[0];if(!f)return;try{if(state.files[key]&&String(state.files[key]).indexOf("blob:")===0)URL.revokeObjectURL(state.files[key])}catch(err){}const u=URL.createObjectURL(f);state.files[key]=u;save()}}
+function flash(sym){const f=$("flash");$("flashSym").textContent=sym;f.style.display="flex";setTimeout(()=>f.style.display="none",1500)}
+function fillRoleDatalist(){const dl=$("roleList");dl.innerHTML="";ALL_ROLES.forEach(r=>{const o=document.createElement("option");o.value=r;dl.appendChild(o)})}
+function svg(tag,attrs={}){const e=document.createElementNS("http://www.w3.org/2000/svg",tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
+function txt(t,x,y,cls,fs){const e=svg("text",{x,y});if(cls)e.setAttribute("class",cls);if(fs)e.setAttribute("font-size",fs);e.textContent=t;return e}
+function tcenter(t,y,cls,fs){const e=svg("text",{x:0,y});if(cls)e.setAttribute("class",cls);if(fs)e.setAttribute("font-size",fs);e.setAttribute("text-anchor","middle");e.textContent=t;return e}
+function meas(text,cls,fs){const e=txt(text,-9999,-9999,cls,fs);if(cls==="name"){const fileProto=document.documentElement.classList.contains("grimm-file-protocol");e.style.fontFamily=fileProto?"'Cinzel', serif":"'Fondamento', cursive";e.style.fontWeight="400"}else if(cls==="role"){e.style.fontFamily="'Cinzel', serif";e.style.fontWeight="700";e.style.letterSpacing="1px"}stage.appendChild(e);const w=e.getComputedTextLength();stage.removeChild(e);return w}
+function fit(text,cls,maxW,maxS,minS){if(meas(text,cls,maxS)<=maxW)return maxS;let lo=minS,hi=maxS,best=minS;for(let i=0;i<14;i++){const m=(lo+hi)/2;const w=meas(text,cls,m);if(w<=maxW){best=m;lo=m}else hi=m}return Math.max(minS,Math.min(maxS,best))}
+function trunc(text,cls,maxW,fs){if(meas(text,cls,fs)<=maxW)return text;let s=text;while(s.length>1&&meas(s+"",cls,fs)>maxW)s=s.slice(0,-1);return s+""}
+function minNeighborDist(rx,ry,n){const d=2*Math.PI/n;let m=Infinity;for(let t=0;t<Math.PI*2;t+=Math.PI/90){const x1=rx*Math.cos(t),y1=ry*Math.sin(t);const x2=rx*Math.cos(t+d),y2=ry*Math.sin(t+d);const dist=Math.hypot(x2-x1,y2-y1);if(dist<m)m=dist}return m}
+function computeGeometry(W,H,n,layout){
+  const pad=14,gap=10,seatMin=16,seatMax=120,k=layout.ratio/100
+  const cx=W/2+layout.offx, cy=H/2+layout.offy
+  const rxAvail=Math.max(10,Math.min(cx,W-cx)-pad), ryAvail=Math.max(10,Math.min(cy,H-cy)-pad)
+  let lo=seatMin,hi=seatMax,best=seatMin,rxBest=0,ryBest=0
+  for(let step=0;step<24;step++){
+    const mid=(lo+hi)/2
+    const rxA=rxAvail-mid, ryA=ryAvail-mid
+    if(rxA<=0||ryA<=0){hi=mid;continue}
+    const base=Math.min(ryA,rxA/k)
+    const rx=Math.max(10,base*k), ry=Math.max(10,base)
+    const need=2*mid+gap
+    const minD=minNeighborDist(rx,ry,n)
+    if(minD>=need){best=mid;rxBest=rx;ryBest=ry;lo=mid}else hi=mid
+  }
+  const minD=minNeighborDist(rxBest,ryBest,n)
+  const seatMaxByNeighbors=(minD-10)/2
+  let seatR=Math.max(seatMin, Math.min(best*layout.scale/100, seatMaxByNeighbors))
+  return{cx,cy,seatR,rx:rxBest,ry:ryBest}
+}
+function clampToStage(x,y,w,h){
+  const r=stage.getBoundingClientRect()
+  return{x:Math.max(window.scrollX + r.left+8, Math.min(window.scrollX + r.right-w-8, x)), y:Math.max(window.scrollY + r.top+8, Math.min(window.scrollY + r.bottom-h-8, y))}
+}
+function openPop(i,x,y,seatR){
+  currentSeat=state.seats[i]
+  $("pnum").textContent=currentSeat.id
+  $("pname").value=currentSeat.name||""
+  $("prole").value=currentSeat.role||""
+  Array.from($("pop").querySelectorAll(".chip")).forEach(ch=>{
+    const k=ch.dataset.flag;ch.classList.toggle("active",!!currentSeat.flags[k])
+    ch.onclick=()=>{currentSeat.flags[k]=!currentSeat.flags[k];if(k==="nominated"&&currentSeat.role==="Manipulator"&&currentSeat.flags.nominated){state.once=state.once||{};state.once.ManipulatorWasNominated=true;try{applyKill(currentSeat,"MANIPULATOR_NOMINATED")}catch(e){}}ch.classList.toggle("active");save();draw();rebuildOrder()}
+  })
+  const rect=stage.getBoundingClientRect()
+  const preferLeft=x>rect.left+rect.width*0.66
+  const rawX=(preferLeft?(rect.left+x-seatR-360):(rect.left+x+seatR+16))
+  const rawY=rect.top+y-40
+  $("pop").style.display="block"
+  const w=$("pop").offsetWidth,h=$("pop").offsetHeight
+  const p=clampToStage(rawX,rawY,w,h)
+  $("pop").style.left=p.x+"px";$("pop").style.top=p.y+"px"
+}
+function closePop(){$("pop").style.display="none";currentSeat=null}
+function savePop(){
+  if(!currentSeat)return
+  const was=currentSeat.role
+  currentSeat.name=$("pname").value.trim()
+  currentSeat.role=$("prole").value.trim()
+  if(/wolf/i.test(currentSeat.role)||currentSeat.role==="Fenrir"||currentSeat.role==="Schattenhund"||currentSeat.role==="König Lykaon"||currentSeat.role==="Schattenwanderer"||currentSeat.role==="Schwarze Witwe")currentSeat.flags.werewolf=true; else currentSeat.flags.werewolf=false
+  if(was!=="Der Weise"&&currentSeat.role==="Der Weise")currentSeat.flags.protected=true
+  save();draw();closePop();rebuildOrder()
+}
+$("searchBtn")&&($("searchBtn").onclick=()=>{
+  const q=($("searchInput").value||"").trim().toLowerCase(); if(!q) return;
+  const hit=state.seats.find(s=>(s.name||"").toLowerCase().includes(q)||(s.role||"").toLowerCase().includes(q));
+  if(!hit){ center("Nichts gefunden.", true); return }
+  // add temporary pulse
+  if(!window._pulseMap) window._pulseMap=new Map();
+  window._pulseMap.set(hit.id, Date.now());
+  draw();
+  setTimeout(()=>{ window._pulseMap.delete(hit.id); draw() }, 2000);
+})
+window.addEventListener("resize", ()=>{ if($("overlay")&&$("overlay").style.display==="flex") fitModalText() })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function applyRitterRetaliationFromNight(){
+  const killed=state.seats.filter(s=>s.role==="Ritter"&&s.meta.killedTonight)
+  if(!killed.length) return
+  killed.forEach(r=>{const near=findNearestWolf(r.id);if(near){applyKill(near,"RITTER_RETALIATE");queueSfxKey("sfxRitter")}})
+}
+function hardReset(){
+  const n=state.seats.length
+  state=createState(n)
+  save(); draw(); rebuildOrder()
+}
+$("applyCount").onclick=()=>{
+  const n=clamp(+$("count").value||12,4,40)
+  $("count").value=n
+  resizeSeats(n)
+  save(); draw(); rebuildOrder()
+}
+$("fitBtn").onclick=autoFit
+$("scale").oninput=e=>{
+  state.layout.scale=+e.target.value; $("scaleVal").textContent=state.layout.scale+"%"; save(); draw()
+}
+$("ratio").oninput=e=>{
+  state.layout.ratio=+e.target.value; $("ratioVal").textContent=state.layout.ratio+"%"; save(); draw()
+}
+$("offx").oninput=e=>{
+  state.layout.offx=+e.target.value; $("offxVal").textContent=Math.round(state.layout.offx)+"px"; save(); draw()
+}
+$("offy").oninput=e=>{
+  state.layout.offy=+e.target.value; $("offyVal").textContent=Math.round(state.layout.offy)+"px"; save(); draw()
+}
+$("startNight").onclick=onNightStart
+$("startDay").onclick=onDayStart
+if($("resetMarks")) $("resetMarks").onclick=resetMarksOnly
+if($("resetAll")) $("resetAll").onclick=hardReset
+function clearRolesNewRound(){
+  if(!state||!state.seats) return;
+  state.seats.forEach(s=>{
+    s.role="";
+    s.flags=Object.assign({},s.flags||{},{dead:false,protected:false,targeted:false,inlove:false,rival:false,werewolf:false,vorbild:false,nominated:false,charmed:false,poisoned:false,burned:false,puppet:false,hmark:false,deadVoteStripped:false});
+    s.meta=Object.assign({},s.meta||{},{cerbHeads:0,killedTonight:false,cursedWolfAura:false,rivalId:null,unholy:false,blockedTonight:false});
+  });
+  state.dark=false;
+  state.nightCount=1;
+  state.once=state.once||{};
+  state.once.LynchCount=0; state.once.KutscherUsed=false; state.once.Used={}; state.once.WaldhexeL=false; state.once.WaldhexeD=false; state.once.MaertyUsed=false; state.once.PestTotal=0; state.once.PestUsedTonight=false; state.once.ProphetTargets=null; state.once.ProphetUnlocked=false; state.once.VoodooCooldown=0; state.once.MogliVorbildId=null; state.once.LehrlingMentorId=null; state.once.OldDebuff=0; state.once.BlockedRolesTonight=[]; state.once._nightIncremented=false; state.once.GebundenShown=false; state.once.DerWeiseFirstAttackUsed=false;
+  state.once.BountyHunterActive=false; state.once.FrankensteinUsed=false;  state.once.KoenigUsed=false; state.once.KopfgeldjägerUsed=false; state.once.MogliUsed=false; state.once.SeelentauscherUsed=false; state.once.BlutpriesterUsed=false; state.once.PestWon=false; state.once.ProphetDeadCount=0; state.once.hunterQueue=[]; state.once.TeamWinner=null; state.fenrirStage=0; state.fenrirSaved=false;
+  state.once.totenkarten={}; state.once.KartenschluckerStapel=0; state.once.KartenschluckerKilledTonight=false; state.once.KartenschluckerShield=false; state.once.KartenschluckerNightCount=0; state.once.TotenratFuehrerSilenced=[]; state.once.TotenratFuehrerRevealed=false; state.once.TotenratFuehrerUsedDeflect=false; state.once.TotenratDeathImmunityPending=false; state.once.HadesLichter=0; state.once.HadesBarriere=false; state.once.HadesVoteBonus=false; state.once.HadesKilledTonight=false; state.once.HadesWon=false; assignTotenkarten();
+  save(); draw(); rebuildOrder();
+  try{ if(typeof window.__renderPhaseCounter==="function") window.__renderPhaseCounter(); }catch(e){}
+  var pc=document.getElementById("phaseCounter"); if(pc) pc.textContent="☀️ " + (window.t ? window.t("day") : "Tag") + " 1";
+}
+if($("clearRolesBtn")) $("clearRolesBtn").onclick=clearRolesNewRound
+if($("totenratRevealBtn")) $("totenratRevealBtn").onclick=function(){
+  const tf=state.seats.find(s=>s.role==="Totenrat-Führer"&&!s.flags.dead);
+  if(!tf||state.once.TotenratFuehrerRevealed) return;
+  const livingWolves=state.seats.filter(s=>!s.flags.dead&&isWolf(s));
+  const n=livingWolves.length;
+  const pr=(window.t&&window.t("totenratRevealPickAll"))||"Totenrat-Führer — wähle alle vermuteten lebenden Wölfe";
+  if(n===0){ try{ center((window.t&&window.t("totenratRevealNoWolves"))||"Keine lebenden Werwölfe — kein Übungsabgleich.", false); }catch(e){}; return; }
+  startMulti(pr+" ("+n+")",n,x=>!x.flags.dead,chosen=>{
+    const chosenIds=new Set(chosen.map(s=>s.id));
+    const wolfIds=new Set(livingWolves.map(s=>s.id));
+    const ok=chosenIds.size===wolfIds.size&&[...chosenIds].every(id=>wolfIds.has(id));
+    if(ok){ try{ center((window.t&&window.t("totenratRevealAllMatch"))||"Alle lebenden Wölfe korrekt ausgewählt.", true); }catch(e){} }
+    else{ state.once.TotenratFuehrerRevealed=true; try{ center((window.t&&window.t("totenratRevealWrong"))||"Falsch — die Wölfe wissen, wer du bist.", false); }catch(e){} }
+    save(); draw();
+  });
+}
+if($("totenratNameWolfBtn")) $("totenratNameWolfBtn").onclick=function(){
+  const tf=state.seats.find(s=>s.role==="Totenrat-Führer"&&!s.flags.dead);
+  if(!tf||state.once.TeamWinner) return;
+  startPick((window.t&&window.t("totenratNameWolfPick"))||"Totenrat-Führer — benenne einen lebenden Spieler als Werwolf",pick=>{
+    if(!pick||pick===tf) return;
+    if(isWolf(pick)){ triggerWin("Totenrat-Führer", tf); try{ if(window.gameLog&&gameLog.add) gameLog.add("🏆",(window.t&&window.t("totenratWinLog"))||"Totenrat-Führer: Werwolf korrekt benannt."); }catch(e){} }
+    else{ try{ center((window.t&&window.t("totenratNameWrong"))||"Kein Werwolf — kein Sieg.", false); }catch(e){} }
+    save(); draw();
+  },x=>!x.flags.dead);
+}
+$("resetNight").onclick=()=>{ resetNightState(); save(); draw(); rebuildOrder() }
+$("resetOnce").onclick=()=>{ state.once=state.once||{}; state.once.LynchCount=0; state.once.KutscherUsed=false; state.once.Used={}; state.once.WaldhexeL=false; state.once.WaldhexeD=false; state.once.MaertyUsed=false; state.once.PestTotal=0; state.once.PestUsedTonight=false; state.once.ProphetTargets=null; state.once.ProphetUnlocked=false; state.once.VoodooCooldown=0; state.once.MogliVorbildId=null; state.once.LehrlingMentorId=null; state.once.OldDebuff=0; state.once.BountyHunterActive=false; state.once.FrankensteinUsed=false;  state.once.KoenigUsed=false; state.once.KopfgeldjägerUsed=false; state.once.MogliUsed=false; state.once.SeelentauscherUsed=false; state.once.BlutpriesterUsed=false; state.once.PestWon=false; state.once.ProphetDeadCount=0; state.once.hunterQueue=[]; state.once.BlockedRolesTonight=[]; state.once._nightIncremented=false; state.once.TeamWinner=null; state.once.GebundenShown=false; state.once.DerWeiseFirstAttackUsed=false; state.once.WhiteWolfCooldown=0; state.once.WhiteWolfUsedTonight=false; state.fenrirStage=0; state.fenrirSaved=false; save(); rebuildOrder() }
+$("nightFile").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return
+  try{ if(state.files.night&&String(state.files.night).indexOf("blob:")===0) URL.revokeObjectURL(state.files.night) }catch(err){}
+  state.files.night=URL.createObjectURL(f)
+  state.files.nightPos=0
+  save()
+}
+$("alarmFile").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return
+  try{ if(state.files.alarm&&String(state.files.alarm).indexOf("blob:")===0) URL.revokeObjectURL(state.files.alarm) }catch(err){}
+  state.files.alarm=URL.createObjectURL(f)
+  save()
+}
+$("pclose").onclick=closePop
+$("psave").onclick=savePop
+$("pclear").onclick=()=>{
+  if(!currentSeat) return
+  currentSeat.name=""; currentSeat.role=""
+  currentSeat.flags={dead:false,protected:false,targeted:false,inlove:false,rival:false,werewolf:false,vorbild:false,nominated:false,charmed:false,poisoned:false,burned:false,puppet:false,hmark:false,deadVoteStripped:false}
+  currentSeat.meta={cerbHeads:0,killedTonight:false,cursedWolfAura:false,rivalId:null,unholy:false,blockedTonight:false}
+  save(); draw(); rebuildOrder()
+}
+window.addEventListener("resize", draw)
+document.addEventListener("keydown",(e)=>{if(e.key==="Escape"){ endPick(); hidePickBar(); closePop() }})
+fillRoleDatalist()
+$("count").value=state.seats.length
+$("scale").value=state.layout.scale; $("scaleVal").textContent=state.layout.scale+"%"
+$("ratio").value=state.layout.ratio; $("ratioVal").textContent=state.layout.ratio+"%"
+$("offx").value=state.layout.offx; $("offxVal").textContent=Math.round(state.layout.offx)+"px"
+$("offy").value=state.layout.offy; $("offyVal").textContent=Math.round(state.layout.offy)+"px"
+initBackgrounds(function(){applyBg(document.body.classList.contains("is-day"))})
+draw();rebuildOrder()
+
+;(function(){
+  var setupModal = document.getElementById("setupModal");
+  var setupStep1 = document.getElementById("setupStep1");
+  var setupStep2 = document.getElementById("setupStep2");
+  var setupStep3 = document.getElementById("setupStep3");
+  var setupNamesInput = document.getElementById("setupNamesInput");
+  var setupWeiter = document.getElementById("setupWeiter");
+  var setupRoleChips = document.getElementById("setupRoleChips");
+  var setupRoleCounter = document.getElementById("setupRoleCounter");
+  var setupVerteilen = document.getElementById("setupVerteilen");
+  var setupZurueck = document.getElementById("setupZurueck");
+  var setupZurueckStep3 = document.getElementById("setupZurueckStep3");
+  var setupFertig = document.getElementById("setupFertig");
+  var setupSelfDistribute = document.getElementById("setupSelfDistribute");
+  var setupOverviewVillagers = document.getElementById("setupOverviewVillagers");
+  var setupOverviewWolves = document.getElementById("setupOverviewWolves");
+  var setupOverviewSolo = document.getElementById("setupOverviewSolo");
+  var setupBtn = document.getElementById("setupBtn");
+  var showRolesBtn = document.getElementById("showRolesBtn");
+  var privateRoleOverlay = document.getElementById("privateRoleOverlay");
+  var privateRoleSeat = document.getElementById("privateRoleSeat");
+  var privateRoleContent = document.getElementById("privateRoleContent");
+  var privateRoleName = document.getElementById("privateRoleName");
+  var privateRoleDesc = document.getElementById("privateRoleDesc");
+  var privateRoleNextBtn = document.getElementById("privateRoleNextBtn");
+  var privateRoleCardImg = document.getElementById("privateRoleCardImg");
+
+  // Card image mapping: internal DE role name → image filename (without .png)
+  var CARD_MAP_DE_EXCEPTIONS = {
+    "Loki": "Loki_DE",
+    "Dorfchronistin": "Dorfchronistin_DE",
+    "Wahnsinniger Kutscher": "Wahnsinniger Kutscher",
+    "Voodoo-Priester": "Voodoo_Priester"
+  };
+  var CARD_MAP_EN = {
+    "Loki": "Loki_EN", "Nachtwächter": "Night_Warden", "Die Gebundenen": "The_Bound",
+    "Waldhexe": "Witch_of_the_Woods", "Rattenfänger": "Pied_Piper", "Sensenträger": "Reaper",
+    "Wolfskind": "Wolf_Child", "Das Orakel": "The_Oracle", "Die Ewigen": "The_Eternal_Ones",
+    "Spürhund": "Scent_Hound", "Schutzengel": "Guardian_Angel", "Werwolf": "Werewolf",
+    "König Lykaon": "King_Lycaon", "Siegreicher Wolf": "Victorious_Wolf",
+    "Seuchenwolf": "Blight_Wolf", "Schicksalswolf": "Fate_Wolf",
+    "Schattenwanderer": "Shadowwalker", "Giftwolf": "Poison_Wolf", "Rudelvater": "Pack_Father",
+    "Schwarze Witwe": "Black_Widow", "Der Weise": "The_Elder",
+    "Verdammniswächter": "Doom_Warden", "Lehrling": "Apprentice",
+    "Wahnsinniger Kutscher": "Mad_Coachman", "Korrupter Richter": "Corrupt_Judge",
+    "Märtyrerin": "Martyr", "Dorfwache": "Village_Guard", "Pestbringerin": "Plague_Bringer",
+    "Prophet des Untergangs": "Prophet_of_Doom", "Spiegelwolf": "Mirror_Wolf",
+    "Dämonischer Wolf": "Demonic_Wolf", "Trugbilderwolf": "Decoy_Wolf",
+    "Schattenhund": "Shadow_Hound", "Besessener Wolf": "Possessed_Wolf", "Fenrir": "Fenrir",
+    "Kutscher": "Coachman", "Seelentauscher": "Soul_Swapper", "Blutpriester": "Blood_Priest",
+    "Traumdeuter": "Dreamer", "Henker": "Executioner", "Feuerteufel": "Pyromaniac",
+    "Voodoo-Priester": "Voodoo_Priest", "Blutwolf": "Blood_Wolf",
+    "Albtraumwolf": "Nightmare_Wolf", "Cerberus": "Cerberus", "Ritter": "Knight",
+    "Rotkäppchen": "Little_Red_Riding_Hood", "Selbstmörder": "Death_Seeker",
+    "Kopfgeldjäger": "Bounty_Hunter", "König": "King",
+    "Dr. Victor Frankenstein": "Dr._Victor_Frankenstein", "Nekromant": "Necromancer",
+    "Kartenschlucker": "The_Collector", "Hades": "Hades", "Doktor": "Doctor",
+    "Fährtenleser": "Tracker", "Waldläufer": "Ranger", "Schutzgeist": "Guardian_Spirit",
+    "Dorfchronistin": "Village_Chronicler_EN", "Wächter am Tor": "Gatewarden",
+    "Zeitwächter": "Time_Warden", "Amalia": "Amalia",
+    "Kriegerin des Lichts": "Warrior_of_Light", "Detektiv": "Detective",
+    "Dorfschmied": "Village_Blacksmith", "Manipulator": "Manipulator",
+    "Doppelspion": "Doppelspion", "Grabräuber": "Grave_Robber", "Parasit": "Parasite",
+    "Todesprediger": "Death_Prophet", "Dorfbewohner": "Villager"
+  };
+
+  function getRoleCardPath(roleName, lang) {
+    if (!roleName) return "";
+    if (lang === "en" && CARD_MAP_EN[roleName]) {
+      return "assets/cards/en/" + CARD_MAP_EN[roleName] + ".png";
+    }
+    var deFile = CARD_MAP_DE_EXCEPTIONS[roleName] || roleName.replace(/ /g, "_");
+    return "assets/cards/de/" + deFile + ".png";
+  }
+
+  var selectedRoleCounts = {};
+  var ALL_ROLES_ARR = typeof ALL_ROLES !== "undefined" ? ALL_ROLES : [];
+
+  function getSelectedRoleCount() {
+    return Object.keys(selectedRoleCounts).reduce(function(sum, role){
+      return sum + (selectedRoleCounts[role] || 0);
+    }, 0);
+  }
+
+  function getRoleMaxCopies(role) {
+    if (role === "Werwolf") return 5;
+    if (role === "Dorfbewohner") return 10;
+    return 1;
+  }
+
+  function getRoleCount(role) {
+    return selectedRoleCounts[role] || 0;
+  }
+
+  function roleLabelWithCount(role) {
+    var base = window.getRoleName ? window.getRoleName(role) : role;
+    var count = getRoleCount(role);
+    if (count > 1) return base + " ×" + count;
+    return base;
+  }
+
+  function renderSetupOverview() {
+    if (!setupOverviewVillagers || !setupOverviewWolves || !setupOverviewSolo) return;
+    var selected = [];
+    Object.keys(selectedRoleCounts).forEach(function(role){
+      var c = selectedRoleCounts[role] || 0;
+      for (var i = 0; i < c; i++) selected.push(role);
+    });
+    var WOLF = new Set(["Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf","Fenrir","Blutwolf","Albtraumwolf","Cerberus"]);
+    var SOLO = new Set(["Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer"]);
+    var villagers = [];
+    var wolves = [];
+    var solo = [];
+    selected.forEach(function(role){
+      if (WOLF.has(role)) wolves.push(role);
+      else if (SOLO.has(role)) solo.push(role);
+      else villagers.push(role);
+    });
+    function fill(el, arr){
+      if (!arr.length) {
+        el.innerHTML = '<div class="setup-overview-empty">—</div>';
+        return;
+      }
+      el.innerHTML = arr.map(function(role){
+        var label = window.getRoleName ? window.getRoleName(role) : role;
+        return '<div class="setup-overview-item">' + label + '</div>';
+      }).join('');
+    }
+    fill(setupOverviewVillagers, villagers);
+    fill(setupOverviewWolves, wolves);
+    fill(setupOverviewSolo, solo);
+  }
+
+  function updateRoleCounterAndActions() {
+    var total = (state && state.seats) ? state.seats.length : 0;
+    var count = getSelectedRoleCount();
+    setupRoleCounter.textContent = window.tf ? window.tf("setupRoleCount", { count: count, total: total }) : (count + " / " + total + " Rollen gewählt");
+    setupRoleCounter.classList.toggle("warn", count < total);
+    setupRoleCounter.classList.toggle("good", count === total);
+    if (setupFertig) {
+      setupFertig.disabled = count !== total;
+      setupFertig.classList.toggle("good", count === total);
+    }
+  }
+
+  function ensureSeatStructure(seat) {
+    if (!seat.flags) seat.flags = { dead: false, protected: false, targeted: false, inlove: false, rival: false, werewolf: false, vorbild: false, nominated: false, charmed: false, poisoned: false, burned: false, puppet: false, hmark: false };
+    if (!seat.meta) seat.meta = { cerbHeads: 0, killedTonight: false, cursedWolfAura: false, rivalId: null, loverId: null, unholy: false, blockedTonight: false };
+    return seat;
+  }
+
+  function updateNamesCounter() {
+    var raw = (setupNamesInput && setupNamesInput.value || "").trim();
+    var names = raw.split(",").map(function(n) { return n.trim(); }).filter(Boolean);
+    var count = names.length;
+    var total = (state && state.seats) ? state.seats.length : 0;
+    var el = document.getElementById("setupNamesCounter");
+    var warnEl = document.getElementById("setupNamesWarning");
+    var weiterBtn = document.getElementById("setupWeiter");
+    if (!el) return;
+    if (window.tf) {
+      el.textContent = window.tf("setupNamesCount", { count: count, total: total });
+    } else {
+      el.textContent = count + " / " + total + " Namen";
+    }
+    var isComplete = total > 0 && count === total;
+    el.classList.toggle("warn", !isComplete && total > 0);
+    el.classList.toggle("good", isComplete);
+    if (warnEl) warnEl.style.display = "none";
+    if (weiterBtn) {
+      weiterBtn.disabled = !isComplete;
+      weiterBtn.classList.toggle("good", isComplete);
+    }
+  }
+
+  if (setupBtn) setupBtn.onclick = function() {
+    if (!state || !state.seats) return;
+    if (typeof window.applySetupBackground === "function") window.applySetupBackground(2, "setupModal");
+    selectedRoleCounts = {};
+    setupNamesInput.value = state.seats.map(function(s) { return (s.name || "").trim(); }).filter(Boolean).join(", ");
+    setupStep1.style.display = "block";
+    setupStep2.style.display = "none";
+    if (setupStep3) setupStep3.style.display = "none";
+    setupModal.style.display = "flex";
+    updateNamesCounter();
+  };
+  if (setupNamesInput) {
+    setupNamesInput.addEventListener("input", updateNamesCounter);
+    setupNamesInput.addEventListener("keyup", updateNamesCounter);
+  }
+
+  var setupClearNamesBtn = document.getElementById("setupClearNames");
+  var setupShuffleBtn = document.getElementById("setupShuffle");
+  if (setupClearNamesBtn) setupClearNamesBtn.onclick = function() {
+    if (setupNamesInput) { setupNamesInput.value = ""; updateNamesCounter(); }
+  };
+  if (setupShuffleBtn) setupShuffleBtn.onclick = function() {
+    if (!setupNamesInput) return;
+    var raw = (setupNamesInput.value || "").trim();
+    var names = raw.split(",").map(function(n) { return n.trim(); }).filter(Boolean);
+    if (names.length < 2) return;
+    for (var i = names.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = names[i]; names[i] = names[j]; names[j] = t;
+    }
+    setupNamesInput.value = names.join(", ");
+    updateNamesCounter();
+  };
+
+  if (setupWeiter) setupWeiter.onclick = function() {
+    var raw = (setupNamesInput.value || "").trim();
+    var names = raw.split(",").map(function(n) { return n.trim(); }).filter(Boolean);
+    if (!names.length) {
+      alert(window.t ? window.t("setupNamesLabel") : "Bitte Namen eingeben.");
+      return;
+    }
+    if (!state) state = typeof createState === "function" ? createState(names.length) : { seats: [] };
+    if (!state.seats) state.seats = [];
+    // Auto-adjust seat count to match entered names
+    while (state.seats.length < names.length) {
+      var id = state.seats.length + 1;
+      state.seats.push({ id: id, name: "", role: "", flags: { dead: false, protected: false, targeted: false, inlove: false, rival: false, werewolf: false, vorbild: false, nominated: false, charmed: false, poisoned: false, burned: false, puppet: false, hmark: false }, meta: { cerbHeads: 0, killedTonight: false, cursedWolfAura: false, rivalId: null, loverId: null, unholy: false, blockedTonight: false } });
+    }
+    while (state.seats.length > names.length) {
+      state.seats.pop();
+    }
+    for (var i = 0; i < names.length; i++) state.seats[i].name = names[i];
+    if (document.getElementById("count")) document.getElementById("count").value = state.seats.length;
+    setupStep1.style.display = "none";
+    setupStep2.style.display = "block";
+    if (setupStep3) setupStep3.style.display = "none";
+    if (typeof window.applySetupBackground === "function") window.applySetupBackground(3, "setupModal");
+    renderRoleChips();
+  };
+
+  var WOLF_ROLES_SET = new Set(["Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf","Fenrir","Blutwolf","Albtraumwolf","Cerberus"]);
+  var SOLO_ROLES_SET = new Set(["Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer"]);
+  function buildChipGroups() {
+    var villagers = [], wolves = [], solos = [];
+    ALL_ROLES_ARR.forEach(function(role) {
+      if (WOLF_ROLES_SET.has(role)) wolves.push(role);
+      else if (SOLO_ROLES_SET.has(role)) solos.push(role);
+      else villagers.push(role);
+    });
+    return [
+      { label: window.t ? window.t("chipGroupVillagers") : "DORFBEWOHNER", typeClass: " setup-chip-villager", roles: villagers },
+      { label: window.t ? window.t("chipGroupWolves") : "WEREWOLVES", typeClass: " setup-chip-wolf", roles: wolves },
+      { label: window.t ? window.t("chipGroupSolo") : "SOLO-ROLLEN", typeClass: " setup-chip-solo", roles: solos }
+    ];
+  }
+  function renderRoleChips() {
+    setupRoleChips.innerHTML = "";
+    var total = (state && state.seats) ? state.seats.length : 0;
+    var chipGroups = buildChipGroups();
+    chipGroups.forEach(function(grp) {
+      var labelEl = document.createElement("div");
+      labelEl.className = "chip-group-label";
+      labelEl.textContent = grp.label;
+      setupRoleChips.appendChild(labelEl);
+      grp.roles.forEach(function(role) {
+        var chip = document.createElement("span");
+        var roleCount = getRoleCount(role);
+        chip.className = "setup-chip" + grp.typeClass + (roleCount > 0 ? " selected" : "");
+        chip.dataset.role = role;
+        var label = document.createElement("span");
+        label.className = "setup-chip-label";
+        label.textContent = roleLabelWithCount(role);
+        var info = document.createElement("span");
+        info.className = "setup-chip-info";
+        info.setAttribute("role", "button");
+        info.setAttribute("aria-label", "Info");
+        info.textContent = "?";
+        chip.appendChild(label);
+        chip.appendChild(info);
+        chip.onclick = function(e) {
+          if (e.target && e.target.closest && e.target.closest(".setup-chip-info")) return;
+          var currentCount = getSelectedRoleCount();
+          var maxCopies = getRoleMaxCopies(role);
+          var currentRoleCount = getRoleCount(role);
+          var next = currentRoleCount + 1;
+          if (next > maxCopies) {
+            next = 0;
+          }
+          if (next > currentRoleCount && currentCount >= total) return;
+          selectedRoleCounts[role] = next;
+          if (!next) delete selectedRoleCounts[role];
+          renderRoleChips();
+        };
+        info.addEventListener("click", function(e) {
+          e.stopPropagation();
+          var desc = window.getRoleDescription
+            ? window.getRoleDescription(role)
+            : (window.ROLE_DESCRIPTIONS && window.ROLE_DESCRIPTIONS[role]) || "—";
+          var title = window.getRoleName ? window.getRoleName(role) : role;
+          if (window.showRoleInfoPopup) window.showRoleInfoPopup(title, desc);
+        });
+        if (window.attachRoleHoverTooltip) window.attachRoleHoverTooltip(chip);
+        if (roleCount > 1) chip.classList.add("multi");
+        if (roleCount === 0 && getSelectedRoleCount() >= total) chip.classList.add("disabled");
+        setupRoleChips.appendChild(chip);
+      });
+    });
+    updateRoleCounterAndActions();
+  }
+
+  if (setupZurueck) setupZurueck.onclick = function() {
+    setupStep2.style.display = "none";
+    setupStep1.style.display = "block";
+    if (setupStep3) setupStep3.style.display = "none";
+    if (typeof window.applySetupBackground === "function") window.applySetupBackground(2, "setupModal");
+  };
+
+  if (setupZurueckStep3) setupZurueckStep3.onclick = function() {
+    if (setupStep3) setupStep3.style.display = "none";
+    setupStep2.style.display = "block";
+    if (typeof window.applySetupBackground === "function") window.applySetupBackground(3, "setupModal");
+  };
+
+  if (setupSelfDistribute) setupSelfDistribute.onclick = function() {
+    var keptNames = state.seats.map(function(s){ return (s.name || "").trim(); });
+    var keptLayout = Object.assign({}, (state && state.layout) ? state.layout : {});
+    var keptFiles = Object.assign({}, (state && state.files) ? state.files : {});
+    var keptFont = state && state.font ? state.font : "fell";
+    var fresh = createState(state.seats.length);
+    fresh.layout = Object.assign({}, fresh.layout || {}, keptLayout);
+    fresh.files = Object.assign({}, fresh.files || {}, keptFiles);
+    fresh.font = keptFont;
+    for (var i = 0; i < fresh.seats.length; i++) {
+      fresh.seats[i].name = keptNames[i] || "";
+      fresh.seats[i].role = "";
+      ensureSeatStructure(fresh.seats[i]);
+    }
+    state = fresh;
+    state.dark = true;
+    if (typeof state.nightCount !== "number" || state.nightCount < 1) state.nightCount = 1;
+    if (typeof assignTotenkarten === "function") assignTotenkarten();
+    var pc = document.getElementById("phaseCounter");
+    if (pc) pc.textContent = "🌙 " + (window.t ? window.t("night") : "Nacht") + " " + (state.nightCount || 1);
+    setupModal.style.display = "none";
+    if (typeof save === "function") save();
+    if (typeof draw === "function") draw();
+    if (typeof rebuildOrder === "function") rebuildOrder();
+    if (typeof window.__enterGameMode === "function") window.__enterGameMode();
+    if (typeof onNightStart === "function") onNightStart();
+    var lbSelf = document.getElementById("lynchBtn");
+    if (lbSelf) lbSelf.style.display = "none";
+  };
+
+  if (setupVerteilen) setupVerteilen.onclick = function() {
+    var roles = [];
+    Object.keys(selectedRoleCounts).forEach(function(role){
+      var c = selectedRoleCounts[role] || 0;
+      for (var n = 0; n < c; n++) roles.push(role);
+    });
+    var seatCount = (state && state.seats) ? state.seats.length : 0;
+    if (roles.length !== seatCount) {
+      if (typeof center === "function") {
+        center(window.tf ? window.tf("setupRolesCountMismatch", { roles: roles.length, seats: seatCount }) : ("Anzahl gewählter Rollen (" + roles.length + ") muss der Anzahl Sitze (" + seatCount + ") entsprechen."), false);
+      }
+      return;
+    }
+    var i, j, t;
+    for (i = roles.length - 1; i > 0; i--) {
+      j = Math.floor(Math.random() * (i + 1));
+      t = roles[i]; roles[i] = roles[j]; roles[j] = t;
+    }
+
+    // Full new-round reset: keep player names, apply fresh role distribution.
+    var keptNames = state.seats.map(function(s){ return (s.name || "").trim(); });
+    var keptLayout = Object.assign({}, (state && state.layout) ? state.layout : {});
+    var keptFiles = Object.assign({}, (state && state.files) ? state.files : {});
+    var keptFont = state && state.font ? state.font : "fell";
+    var fresh = createState(state.seats.length);
+    fresh.layout = Object.assign({}, fresh.layout || {}, keptLayout);
+    fresh.files = Object.assign({}, fresh.files || {}, keptFiles);
+    fresh.font = keptFont;
+    for (i = 0; i < fresh.seats.length; i++) {
+      fresh.seats[i].name = keptNames[i] || "";
+      fresh.seats[i].role = roles[i] || "";
+      fresh.seats[i].flags.werewolf = /wolf/i.test(fresh.seats[i].role) || fresh.seats[i].role === "Schattenhund" || fresh.seats[i].role === "König Lykaon" || fresh.seats[i].role === "Schattenwanderer" || fresh.seats[i].role === "Schwarze Witwe";
+      ensureSeatStructure(fresh.seats[i]);
+    }
+    state = fresh;
+    state.dark = true;
+    if (typeof state.nightCount !== "number" || state.nightCount < 1) state.nightCount = 1;
+    if (typeof assignTotenkarten === "function") assignTotenkarten();
+
+    var pc = document.getElementById("phaseCounter");
+    if (pc) pc.textContent = "🌙 " + (window.t ? window.t("night") : "Nacht") + " " + (state.nightCount || 1);
+
+    setupModal.style.display = "none";
+    if (typeof save === "function") save();
+    if (typeof draw === "function") draw();
+    if (typeof rebuildOrder === "function") rebuildOrder();
+    if (typeof window.__enterGameMode === "function") window.__enterGameMode();
+    if (typeof onNightStart === "function") onNightStart();
+    var lbRand = document.getElementById("lynchBtn");
+    if (lbRand) lbRand.style.display = "none";
+  };
+
+  function closeSetupAndSave() {
+    setupModal.style.display = "none";
+    if (typeof save === "function") save();
+    if (typeof draw === "function") draw();
+    if (typeof rebuildOrder === "function") rebuildOrder();
+  }
+
+  if (setupFertig) setupFertig.onclick = function() {
+    if (getSelectedRoleCount() !== ((state && state.seats) ? state.seats.length : 0)) {
+      return;
+    }
+    if (typeof window.applySetupBackground === "function") window.applySetupBackground(4, "setupModal");
+    renderSetupOverview();
+    setupStep2.style.display = "none";
+    if (setupStep3) setupStep3.style.display = "block";
+  };
+
+  function closePrivateRoleOverlay() {
+    privateRoleOverlay.classList.remove("active");
+  }
+
+  function showPrivateRoleSequence() {
+    if (!state || !state.seats) return;
+    var seats = state.seats.filter(function(s) { return !s.flags.dead; });
+    if (!seats.length) {
+      if (typeof center === "function") center((window.t && window.t("noLivingSeats")) || "Keine lebenden Sitze.", false);
+      return;
+    }
+    var index = 0;
+    privateRoleOverlay.classList.add("active");
+
+    function showSeat() {
+      if (index >= seats.length) return;
+      var seat = seats[index];
+      var isLast = index === seats.length - 1;
+      var lang = localStorage.getItem("grimmhain_lang") || "de";
+      privateRoleSeat.textContent = (window.t ? window.t("seat") : "Sitz") + " " + seat.id + " — " + (seat.name || "?");
+      privateRoleContent.style.display = "flex";
+      privateRoleName.textContent = seat.role ? (window.getRoleName ? window.getRoleName(seat.role) : seat.role) : "—";
+      privateRoleDesc.textContent = seat.role ? (window.getRoleDescription ? window.getRoleDescription(seat.role) : ((window.ROLE_DESCRIPTIONS && window.ROLE_DESCRIPTIONS[seat.role]) ? window.ROLE_DESCRIPTIONS[seat.role] : seat.role)) : "—";
+      // Show role card image
+      if (privateRoleCardImg && seat.role) {
+        var cardPath = getRoleCardPath(seat.role, lang);
+        privateRoleCardImg.classList.remove("img-error");
+        privateRoleCardImg.onerror = function() { privateRoleCardImg.classList.add("img-error"); };
+        privateRoleCardImg.src = cardPath;
+        privateRoleCardImg.alt = seat.role;
+      } else if (privateRoleCardImg) {
+        privateRoleCardImg.src = "";
+      }
+      privateRoleNextBtn.textContent = isLast ? ((window.t ? window.t("setupDone") : "Fertig") + " ✓") : (window.t ? window.t("roleRevealNext") : "Weiter →");
+      privateRoleNextBtn.onclick = function() {
+        if (isLast) closePrivateRoleOverlay();
+        else { index++; showSeat(); }
+      };
+    }
+    showSeat();
+  }
+
+  if (showRolesBtn) showRolesBtn.onclick = showPrivateRoleSequence;
+})();
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+<!-- UX PATCH v7: restore circle sliders, minimal timer with ±10s, remove presets & loop/alarm -->
+<script>
+(function(){
+  const $ = sel => document.querySelector(sel);
+  const byId = id => document.getElementById(id);
+
+  // Restore circle sliders
+  try{
+    const det = byId('circleSection');
+    if(det){
+      const parent = det.parentElement;
+      const rows = Array.from(det.querySelectorAll('.row'));
+      rows.forEach(r => parent.insertBefore(r, det));
+      det.remove();
+    }
+    ['scale','ratio','offx','offy'].forEach(id=>{
+      const el = byId(id);
+      if(el && el.parentElement){
+        el.parentElement.style.display = '';
+        el.parentElement.style.visibility = 'visible';
+      }
+    });
+  }catch(e){}
+
+  // Labels
+  try{
+    const h2 = document.querySelector('.order h2'); if(h2) h2.textContent = window.t ? window.t('nightOrder') : 'Night Order';
+    const nm = byId('nightFileBtn'); if(nm) nm.textContent = window.t ? window.t('chooseNightMusic') : 'Nachtmusik';
+  }catch(e){}
+
+  // Timer minimal & arrows
+  function pad(v){return (v<10?'0':'')+v}
+  function parseMMSS(s){ const m=/^(\d{1,2}):([0-5]\d)$/.exec(String(s).trim()); return m?((+m[1])*60+(+m[2])):0; }
+  function fmtMMSS(sec){ sec=Math.max(0,Math.min(59*60+59,sec|0)); return pad(sec/60|0)+':'+pad(sec%60); }
+  function setTimer(sec){
+    const inp = byId('timerIn'); if(!inp) return;
+    inp.value = fmtMMSS(sec);
+    if(window.tLeft!=null && window.tInt) window.tLeft = sec;
+  }
+  function adjustTimer(delta){
+    const cur = parseMMSS(byId('timerIn')?.value || '0:00');
+    setTimer(cur + delta);
+  }
+  try{
+    const row = document.querySelector('.row > label + input#timerIn')?.parentElement;
+    if(row){
+      const lbl = row.querySelector('label'); if(lbl) lbl.textContent = window.t ? window.t('timer') : 'Timer einstellen';
+      row.querySelectorAll('button').forEach(b=>{
+        const id = b.id || '';
+        if(id!=='tStart' && id!=='tReset' && !b.classList.contains('tiny')) b.remove();
+      });
+      let sib = row.nextElementSibling;
+      while(sib && (sib.classList.contains('chiprow') || sib.querySelector?.('.btn.tiny') || /:?\d+:?\d?0?s?/.test(sib.textContent))){
+        const rm = sib; sib = sib.nextElementSibling; rm.remove();
+      }
+      const inp = row.querySelector('#timerIn');
+      if(inp && !row.querySelector('.btn.tiny')){
+        const wrap = document.createElement('span');
+        const up = document.createElement('button'); up.className='btn tiny'; up.textContent='▲'; up.title='+10 Sekunden'; up.onclick=()=>adjustTimer(+10);
+        const dn = document.createElement('button'); dn.className='btn tiny'; dn.textContent='▼'; dn.title='-10 Sekunden'; dn.onclick=()=>adjustTimer(-10);
+        wrap.appendChild(up); wrap.appendChild(dn);
+        inp.after(wrap);
+        inp.addEventListener('keydown', e=>{ if(e.key==='ArrowUp'){adjustTimer(+10); e.preventDefault();} if(e.key==='ArrowDown'){adjustTimer(-10); e.preventDefault();} });
+      }
+    }
+  }catch(e){}
+
+
+  // Only one Rollen zurücksetzen
+  try{
+    const all = Array.from(document.querySelectorAll('button')).filter(b=>/Rollen zurücksetzen/i.test(b.textContent));
+    if(all.length>1){ all.slice(1).forEach(b=>b.remove()); all[0].id='resetRoles'; }
+  }catch(e){}
+})();
+
+
+
+
+
+
+
+
+</script>
+
+
+<!-- MARKER ORBIT PATCH v1: arrange seat markers in rings around each seat -->
+<script>
+(function(){
+  if (typeof window.draw !== "function") return;
+  var __patched = window.__marker_orbit_patched_v1;
+  if (__patched) return;
+  window.__marker_orbit_patched_v1 = true;
+
+  var _draw = window.draw;
+  window.draw = function(){
+    _draw.apply(this, arguments);
+    try {
+      var seats = document.querySelectorAll("g.seat");
+      seats.forEach(function(g){
+        var plate = g.querySelector(".plate");
+        var seatR = 40;
+        if (plate) {
+          seatR = +plate.getAttribute("r") || +plate.getAttribute("rx") || 40;
+        }
+        seatR = Math.max(20, seatR);
+
+        var mksGroup = g.querySelector("g.mks");
+        if (!mksGroup) return;
+        var mks = mksGroup.querySelectorAll("text.mk, .mk");
+        var n = mks.length;
+        if (!n) return;
+
+        // build up to 3 rings for many markers
+        var R1 = seatR * 1.25;
+        var R2 = seatR * 1.95;
+        var R3 = seatR * 2.55;
+
+        var ring1, ring2 = [], ring3 = [];
+        if (n <= 8) {
+          ring1 = Array.prototype.slice.call(mks);
+        } else if (n <= 16) {
+          var split = Math.ceil(n/2);
+          ring1 = Array.prototype.slice.call(mks, 0, split);
+          ring2 = Array.prototype.slice.call(mks, split);
+        } else {
+          var split1 = Math.ceil(n/3), split2 = Math.ceil(2*n/3);
+          ring1 = Array.prototype.slice.call(mks, 0, split1);
+          ring2 = Array.prototype.slice.call(mks, split1, split2);
+          ring3 = Array.prototype.slice.call(mks, split2);
+        }
+
+        function place(ring, radius){
+          if (!ring.length) return;
+          var step = (ring.length <= 6 ? (Math.PI*1.2/ring.length) : (Math.PI*1.65/ring.length));
+          var base = -Math.PI/2;
+          ring.forEach(function(el, k){
+            // clear any inline offsets that fight our layout
+            el.removeAttribute("dx"); el.removeAttribute("dy");
+            var ang = base + (k - (ring.length-1)/2) * step;
+            var x = Math.cos(ang)*radius;
+            var y = Math.sin(ang)*radius;
+            el.setAttribute("x", x.toFixed(1));
+            el.setAttribute("y", y.toFixed(1));
+            el.setAttribute("text-anchor", "middle");
+          });
+        }
+
+        place(ring1, R1);
+        place(ring2, R2);
+        place(ring3, R3);
+      });
+    } catch(e) {
+      console.warn("marker orbit error", e);
+    }
+  };
+})();
+
+// Nach Aufbau der Night Order erneut initialisieren
+if (!window.__rebuildWrappedStars) {
+  window.__rebuildWrappedStars = true;
+  var origRebuildOrder = typeof window.rebuildOrder === "function" ? window.rebuildOrder : rebuildOrder;
+  if (typeof origRebuildOrder === "function") {
+    rebuildOrder = function(){
+      origRebuildOrder();
+      initNightOrderStars();
+    };
+    window.rebuildOrder = rebuildOrder;
+  }
+}
+
+// Reset-Buttons verknüpfen
+document.addEventListener('DOMContentLoaded', ()=>{
+  const resetNightBtn = document.getElementById('resetNight');
+  const resetOnceBtn = document.getElementById('resetOnce');
+  if(resetNightBtn) resetNightBtn.addEventListener('click', resetNightStars);
+  if(resetOnceBtn) resetOnceBtn.addEventListener('click', resetNightStars);
+});
+// --- Ende Ergänzung ---
+
+// --- Erweiterung: Dragbarer Mittelpunkt (robust, sichtbar, immer klickbar) ---
+document.addEventListener('DOMContentLoaded',()=>{
+  const stage = document.getElementById('stage');
+  if(!stage) return;
+
+  function initDraggableCenter(attempt=0){
+    const svg = stage.tagName==='SVG' ? stage : stage.querySelector('svg');
+    if(!svg){
+      if(attempt<100) setTimeout(()=>initDraggableCenter(attempt+1),100);
+      return;
+    }
+
+    // Alle Sitz-Elemente in <g id="seatGroup"> verschieben
+    let seatGroup = svg.querySelector('#seatGroup');
+    if(!seatGroup){
+      seatGroup = document.createElementNS('http://www.w3.org/2000/svg','g');
+      seatGroup.setAttribute('id','seatGroup');
+      const seats = Array.from(svg.querySelectorAll('.seat, .ring, .plate, .num, .name, .role'));
+      seats.forEach(el=>seatGroup.appendChild(el));
+      svg.appendChild(seatGroup);
+    }
+
+    // Mittelpunkt-Kreis hinzufügen
+    let dot = svg.querySelector('#centerDot');
+    if(!dot){
+      dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      dot.setAttribute('id','centerDot');
+      dot.setAttribute('cx',0);
+      dot.setAttribute('cy',0);
+      dot.setAttribute('r',16);
+      dot.setAttribute('fill','#3399ff88');
+      dot.setAttribute('stroke','white');
+      dot.setAttribute('stroke-width','2');
+      dot.style.cursor='grab';
+      svg.appendChild(dot);
+    } else {
+      dot.setAttribute('fill','#3399ff88');
+      dot.setAttribute('stroke','white');
+      dot.setAttribute('stroke-width','2');
+    }
+
+    // Punkt in den Vordergrund bringen
+    svg.appendChild(dot);
+
+    let dragging = false;
+    let last = {x:0, y:0};
+    let offset = {x:(state.layout&&typeof state.layout.offx==="number")?state.layout.offx:0,
+                  y:(state.layout&&typeof state.layout.offy==="number")?state.layout.offy:0};
+
+    svg.addEventListener('mousedown', e => {
+      if(e.target.id !== 'centerDot') return;
+      dragging = true;
+      dot.style.cursor = 'grabbing';
+      last = {x:e.clientX, y:e.clientY};
+    });
+
+    window.addEventListener('mousemove', e => {
+      if(!dragging) return;
+      const dx = e.clientX - last.x;
+      const dy = e.clientY - last.y;
+      offset.x += dx;
+      offset.y += dy;
+      seatGroup.setAttribute('transform', `translate(${offset.x}, ${offset.y})`);
+      seatGroup.setAttribute('transform', `translate(${offset.x}, ${offset.y})`);
+      dot.setAttribute('cx', offset.x);
+      dot.setAttribute('cy', offset.y);
+      last = {x:e.clientX, y:e.clientY};
+    });
+
+    window.addEventListener('mouseup', () => {
+      if(dragging){
+        dragging = false;
+        dot.style.cursor = 'grab';
+        try{
+          state.layout = state.layout || {};
+          state.layout.offx = offset.x;
+          state.layout.offy = offset.y;
+          if(typeof save==="function") save();
+        }catch(e){}
+      }
+    });
+  }
+
+  // Wiederholt prüfen, bis SVG fertig geladen ist
+  initDraggableCenter();
+});
+// --- Ende Erweiterung ---
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+<!-- === Dynamic Circle Controls (integrated) === -->
+<script>
+(function(){
+  const gear=document.getElementById('circleGearBtn');
+  const panel=document.getElementById('circlePanel');
+  if(!gear||!panel) return;
+  const STORE='dynamic_circle_cfg_v1';
+  const badge=document.getElementById('cpBadge');
+  const cpPlayers=document.getElementById('cpPlayers');
+  const cpRadius=document.getElementById('cpRadius');
+  const cpRotate=document.getElementById('cpRotate');
+  const cpOffX=document.getElementById('cpOffX');
+  const cpOffY=document.getElementById('cpOffY');
+  const cpReset=document.getElementById('cpReset');
+  const cpCenter=document.getElementById('cpCenter');
+  const cpSave=document.getElementById('cpSave');
+  const cpExport=document.getElementById('cpExport');
+  const inputs={n:cpPlayers,r:cpRadius,rot:cpRotate,ox:cpOffX,oy:cpOffY};
+  if(!inputs.n||!inputs.r||!inputs.rot||!inputs.ox||!inputs.oy||!cpReset||!cpCenter||!cpSave||!cpExport) return;
+  let cfg={n:null,r:260,rot:0,ox:0,oy:0};
+
+  function load(){ try{const raw=localStorage.getItem(STORE); if(raw) cfg=Object.assign(cfg,JSON.parse(raw));}catch(e){} }
+  function save(){ localStorage.setItem(STORE,JSON.stringify(cfg)); if(badge) badge.textContent=(cfg.n||'auto')+' Spieler • r='+Math.round(cfg.r)+' • rot='+Math.round(cfg.rot)+'°'; }
+  function waitSvg(cb,tries=0){
+    const stage=document.getElementById('stage');
+    const svg=stage&&stage.tagName==='SVG'?stage:(stage?stage.querySelector('svg'):null);
+    if(svg){ cb(svg); return; }
+    if(tries<150) return setTimeout(()=>waitSvg(cb,tries+1),100);
+  }
+  function syncFromInputs(){ cfg.n=inputs.n.value?parseInt(inputs.n.value):null; cfg.r=parseFloat(inputs.r.value||260); cfg.rot=parseFloat(inputs.rot.value||0); cfg.ox=parseFloat(inputs.ox.value||0); cfg.oy=parseFloat(inputs.oy.value||0); }
+  function syncToInputs(svg){ const c=(svg.querySelectorAll('.seat')||[]).length||18; inputs.n.value=cfg.n??c; inputs.r.value=cfg.r; inputs.rot.value=cfg.rot; inputs.ox.value=cfg.ox; inputs.oy.value=cfg.oy; }
+  function applyCircle(svg){
+    const seats=svg.querySelectorAll('.seat');
+    const N=cfg.n?Math.max(1,parseInt(cfg.n)):seats.length;
+    const cx=600+(cfg.ox||0), cy=350+(cfg.oy||0), r=parseFloat(cfg.r||260), rot=parseFloat(cfg.rot||0);
+    const use=Math.min(N,seats.length);
+    for(let i=0;i<use;i++){ const a=((360/N)*i+rot-90)*Math.PI/180; const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a); seats[i].setAttribute('transform','translate('+x+','+y+')'); }
+    for(let i=use;i<seats.length;i++){ const a=((360/seats.length)*i+rot-90)*Math.PI/180; const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a); seats[i].setAttribute('transform','translate('+x+','+y+')'); }
+    if(badge) badge.textContent=(cfg.n||seats.length)+' Spieler • r='+Math.round(r)+' • rot='+Math.round(rot)+'°';
+  }
+  function exportLayout(svg){
+    const N=cfg.n?parseInt(cfg.n):(svg.querySelectorAll('.seat')||[]).length;
+    const cx=600+cfg.ox, cy=350+cfg.oy, r=cfg.r, rot=cfg.rot; const data=[];
+    for(let i=0;i<N;i++){ const a=((360/N)*i+rot-90)*Math.PI/180; const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a); data.push({index:i+1,x,y,angleDeg:(360/N)*i+rot-90}); }
+    const blob=new Blob([JSON.stringify({cfg,seats:data},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dynamic_circle_layout.json'; a.click(); URL.revokeObjectURL(url);
+  }
+  function init(){
+  try{ assignRandomSeatNames(); save(); draw(); }catch(e){}
+
+    load();
+    waitSvg(svg=>{
+      syncToInputs(svg);
+      gear.onclick=()=>{ panel.style.display=(panel.style.display==='none'||!panel.style.display)?'block':'none'; };
+      ['n','r','rot','ox','oy'].forEach(k=> inputs[k].addEventListener('input', ()=>{ syncFromInputs(); applyCircle(svg); }));
+      cpReset.onclick = ()=>{ const c=(svg.querySelectorAll('.seat')||[]).length||18; cfg={n:c,r:260,rot:0,ox:0,oy:0}; syncToInputs(svg); applyCircle(svg); };
+      cpCenter.onclick= ()=>{ cfg.ox=0; cfg.oy=0; syncToInputs(svg); applyCircle(svg); };
+      cpSave.onclick  = ()=>{ syncFromInputs(); save(); };
+      cpExport.onclick= ()=>{ syncFromInputs(); exportLayout(svg); };
+      applyCircle(svg);
+    });
+  }
+  init();
+})();
+</script>
+<!-- === /Dynamic Circle Controls === -->
+
+
+
+</script>
+<!-- === /Dynamic Circle Controls === -->
+
+
+<script>
+(function(){
+  try {
+    const saved = localStorage.getItem('globalPush_v1');
+    if (typeof state.layout.globalPush !== 'number') {
+      state.layout.globalPush = saved ? parseFloat(saved) : 0;
+    }
+  } catch(e){}
+
+  const _draw = draw;
+  draw = function(){
+    _draw();
+    try{
+      const svg = document.getElementById('stage');
+      const R = svg.getBoundingClientRect();
+      const W = R.width, H = R.height;
+      const n = Math.max(4, state.seats.length);
+      const ggeo = computeGeometry(W,H,n,state.layout);
+      const push = state.layout.globalPush || 0;
+      if (push !== 0){
+        document.querySelectorAll('.seat').forEach((node)=>{
+          const i = parseInt(node.dataset.i,10);
+          const ang = -Math.PI/2 + i*(2*Math.PI/n);
+          const extraX = Math.cos(ang) * ggeo.rx * push * 0.18;
+          const extraY = Math.sin(ang) * ggeo.ry * push * 0.18;
+          const tr = node.getAttribute('transform');
+          const m = /translate\(([^,]+),([^\)]+)\)/.exec(tr);
+          if(m){
+            const x = parseFloat(m[1]) + extraX;
+            const y = parseFloat(m[2]) + extraY;
+            node.setAttribute('transform', `translate(${x},${y})`);
+          }
+        });
+      }
+    }catch(e){}
+  };
+
+})();
+
+
+
+
+
+
+
+
+</script>
+
+
+<script>
+(function(){
+  function init(){
+    const hub = document.getElementById('controlHub');
+    if(!hub) return;
+    // Load saved pos
+    try{
+      const saved = JSON.parse(localStorage.getItem('hubPos_v2')||'{}');
+      if(typeof saved.left==='number' && typeof saved.top==='number'){
+        hub.style.left = saved.left + 'px';
+        hub.style.top = saved.top + 'px';
+        hub.style.bottom = 'auto';
+      }
+    }catch(e){}
+    const header = hub.firstElementChild;
+    let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+    if(header){
+      header.style.cursor='move';
+      header.addEventListener('mousedown', (e)=>{
+        dragging=true;
+        const rect=hub.getBoundingClientRect();
+        startLeft=rect.left; startTop=rect.top;
+        startX=e.clientX; startY=e.clientY;
+        e.preventDefault();
+      });
+    }
+    window.addEventListener('mousemove', (e)=>{
+      if(!dragging) return;
+      const dx=e.clientX-startX, dy=e.clientY-startY;
+      hub.style.left=(startLeft+dx)+'px';
+      hub.style.top=(startTop+dy)+'px';
+      hub.style.bottom='auto';
+    });
+    window.addEventListener('mouseup', ()=>{
+      if(!dragging) return;
+      dragging=false;
+      const rect=hub.getBoundingClientRect();
+      try{ localStorage.setItem('hubPos_v2', JSON.stringify({left:rect.left, top:rect.top})); }catch(e){}
+    });
+  }
+  if(document.readyState==='complete'||document.readyState==='interactive') setTimeout(init,0);
+  else window.addEventListener('DOMContentLoaded', init);
+})();
+
+
+
+
+
+
+
+
+</script>
+
+
+<script>
+document.getElementById("tStart")?.addEventListener("click",startTimer);
+document.getElementById("tPause")?.addEventListener("click",pauseTimer);
+document.getElementById("tReset")?.addEventListener("click",resetTimer);
+
+
+
+
+</script>
+
+
+<script>
+// fontPreset entfernt – Listener deaktiviert
+/*document.getElementById("fontPreset").addEventListener("change", function() {
+  const val = this.value;
+  const root = document.documentElement.style;
+  const map = {
+    fell: ["'IM Fell English',serif", "'Crimson Pro',serif"],
+    cinzel: ["'Cinzel',serif", "'Crimson Pro',serif"],
+    medieval: ["'Medieval Sharp',serif", "'Crimson Pro',serif"],
+    unifraktur: ["'UnifrakturCook',cursive", "'Crimson Pro',serif"],
+    cormorant: ["'Cormorant Garamond',serif", "'Crimson Pro',serif"],
+    creepster: ["'Creepster',cursive", "'Cinzel Decorative',serif"],
+    caudex: ["'Caudex',serif", "'Cinzel',serif"],
+    spectral: ["'Spectral SC',serif", "'IM Fell English',serif"],
+    vollkorn: ["'Vollkorn',serif", "'Cormorant Garamond',serif"],
+    alegreya: ["'Alegreya SC',serif", "'Crimson Text',serif"],
+    oldstandard: ["'Old Standard TT',serif", "'Noto Serif Display',serif"],
+    eagle: ["'Eagle Lake',cursive", "'Crimson Pro',serif"],
+    forum: ["'Forum',serif", "'Cinzel',serif"],
+    smythe: ["'Smythe',serif", "'Vollkorn',serif"],
+    fruktur: ["'Fruktur',cursive", "'Crimson Pro',serif"],
+    nosifer: ["'Nosifer',cursive", "'Creepster',cursive"],
+    macondo: ["'Macondo',cursive", "'Medieval Sharp',serif"],
+    fellpica: ["'IM Fell DW Pica',serif", "'Crimson Pro',serif"],
+    unicase: ["'Cormorant Unicase',serif", "'Cinzel',serif"]
+  };
+  if(map[val]) {
+    root.setProperty("--name", map[val][0]);
+    root.setProperty("--role", map[val][1]);
+  }
+});*/
+
+
+
+
+
+
+
+
+</script>
+
+
+<script>
+document.getElementById("tSound")?.addEventListener("click", ()=>{
+  const input=document.createElement("input");
+  input.type="file";
+  input.accept="audio/*";
+  input.onchange=e=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      if(!window.state) window.state={files:{}};
+      if(!state.files) state.files={};
+      state.files.alarm=ev.target.result;
+      alert("Timersound gesetzt: " + file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+});
+
+
+
+
+
+
+
+
+</script>
+
+
+<script>
+
+
+
+
+</script>
+<script>
+/* 🔧 Touch-Unterstützung für iPad & Mobile:
+   Wandelt Touch-Bewegungen in Maus-Events um */
+document.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  if (!t) return;
+  const mouseEvent = new MouseEvent('mousedown', {
+    clientX: t.clientX,
+    clientY: t.clientY,
+    bubbles: true
+  });
+  e.target.dispatchEvent(mouseEvent);
+}, { passive: false });
+
+document.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  if (!t) return;
+  const mouseEvent = new MouseEvent('mousemove', {
+    clientX: t.clientX,
+    clientY: t.clientY,
+    bubbles: true
+  });
+  e.target.dispatchEvent(mouseEvent);
+}, { passive: false });
+
+document.addEventListener('touchend', e => {
+  const mouseEvent = new MouseEvent('mouseup', { bubbles: true });
+  e.target.dispatchEvent(mouseEvent);
+}, { passive: false });
+
+(function(){
+  var startX=0, startY=0;
+  document.addEventListener('touchstart',function(e){
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-startX;
+    var dy=e.changedTouches[0].clientY-startY;
+    if(Math.abs(dy)>Math.abs(dx)||Math.abs(dx)<60) return;
+    var wrap=document.querySelector('.wrap');
+    if(!wrap) return;
+    if(dx>0 && startX<40){
+      wrap.classList.remove('side-collapsed');
+    } else if(dx<0 && startX>window.innerWidth-40){
+      wrap.classList.remove('order-collapsed');
+    }
+  },{passive:true});
+})();
+
+
+
+
+
+
+
+
+</script>
+
+
+<script>
+window.addEventListener("load", () => {
+  const pc = document.getElementById("phaseCounter");
+  const lynch = document.getElementById("lynchBtn");
+
+  const render = () => {
+    const curNight = (window.state && typeof state.nightCount==="number") ? state.nightCount : 1;
+    const curIsNight = !!(window.state && state.dark);
+    const curDay = curIsNight ? Math.max(0, curNight-1) : curNight;
+    if (pc) {
+      const nLabel = window.t ? window.t("night") : "Nacht";
+      const dLabel = window.t ? window.t("day") : "Tag";
+      pc.textContent = curIsNight ? `🌙 ${nLabel} ${curNight}` : `☀️ ${dLabel} ${curDay}`;
+      try{ if(typeof fitTextToBox==="function") setTimeout(()=>fitTextToBox(pc,32,12),0); }catch(e){}
+    }
+    if (lynch) {
+      const inGameMode = document.body.classList.contains("app-mode-game");
+      lynch.style.display = (inGameMode && !curIsNight) ? "inline-flex" : "none";
+    }
+    const phaseNightEmoji = document.getElementById("phaseEmojiNight");
+    const phaseDayEmoji = document.getElementById("phaseEmojiDay");
+    if (phaseNightEmoji) {
+      phaseNightEmoji.style.opacity = curIsNight ? "1" : "0.4";
+      phaseNightEmoji.classList.toggle("phase-active", curIsNight);
+    }
+    if (phaseDayEmoji) {
+      phaseDayEmoji.style.opacity = curIsNight ? "0.4" : "1";
+      phaseDayEmoji.classList.toggle("phase-active", !curIsNight);
+    }
+  };
+  window.__renderPhaseCounter = render;
+
+  
+// Night-Order Stern-Markierung für alle nachtaktiven Rollen
+(function(){
+  function wrapPickOnce(){
+    if(typeof window.pick !== "function" || window.pick.__starWrapped) return;
+    const __origPick = window.pick;
+    window.pick = function(prompt,onSeat,allow){
+      const activeRole = window.__activeRole;
+      if(activeRole && typeof onSeat === "function"){
+        const __origOnSeat = onSeat;
+        onSeat = function(seat){
+          try{
+            __origOnSeat(seat);
+          }finally{
+            try{ markStarUsed(activeRole); }catch(e){}
+          }
+        };
+      }
+      return __origPick.call(this, prompt, onSeat, allow);
+    };
+    window.pick.__starWrapped = true;
+  }
+  function wrapStartMultiOnce(){
+    if(typeof window.startMulti !== "function" || window.startMulti.__starWrapped) return;
+    const __origStartMulti = window.startMulti;
+    window.startMulti = function(prompt,max,allow,done){
+      const activeRole = window.__activeRole;
+      if(activeRole && typeof done === "function"){
+        const __origDone = done;
+        done = function(chosen){
+          try{
+            __origDone(chosen);
+          }finally{
+            try{ markStarUsed(activeRole); }catch(e){}
+          }
+        };
+      }
+      return __origStartMulti.call(this, prompt, max, allow, done);
+    };
+    window.startMulti.__starWrapped = true;
+  }
+  function tryWrap(){
+    try{ wrapPickOnce(); wrapStartMultiOnce(); }catch(e){}
+  }
+  if(document.readyState === "complete" || document.readyState === "interactive"){
+    setTimeout(tryWrap, 0);
+  }else{
+    document.addEventListener("DOMContentLoaded", ()=>setTimeout(tryWrap,0));
+  }
+})();
+
+const nightBtn = document.getElementById("startNight");
+  const dayBtn = document.getElementById("startDay");
+
+  if (nightBtn) nightBtn.addEventListener("click", () => { render(); });
+  if (dayBtn) dayBtn.addEventListener("click", () => { render(); resetNightStars(); });
+
+  const phaseEmojiNight = document.getElementById("phaseEmojiNight");
+  const phaseEmojiDay = document.getElementById("phaseEmojiDay");
+  const phaseNightOrderBtn = document.getElementById("phaseNightOrderBtn");
+  const phaseDayOrderBtn = document.getElementById("phaseDayOrderBtn");
+  if (phaseEmojiNight) phaseEmojiNight.addEventListener("click", () => { if (nightBtn) nightBtn.click(); });
+  if (phaseEmojiDay) phaseEmojiDay.addEventListener("click", () => { if (dayBtn) dayBtn.click(); });
+  if (phaseNightOrderBtn) phaseNightOrderBtn.addEventListener("click", () => { if (nightBtn) nightBtn.click(); });
+  if (phaseDayOrderBtn) phaseDayOrderBtn.addEventListener("click", () => { if (dayBtn) dayBtn.click(); });
+
+  render();
+});
+</script>
+
+
+<!-- Hunter next-day: single-source-of-truth -->
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  function ensureQueue(){
+    if(!window.state) return;
+    state.once = state.once || {};
+    state.once.hunterQueue = state.once.hunterQueue || [];
+  }
+
+  // Public helper used by lynch/night replacements
+  window.__queueHunterOnDeath = function(seat){
+  try{
+    if(!seat) return;
+    ensureQueue();
+    seat.meta = seat.meta || {};
+    if(seat.meta.hunterShot || seat.meta.hunterQueued) return;
+    const role = (seat.role||'').trim();
+    if(!/^Sensenträger$/i.test(role)) return;
+    if(!seat.flags || !seat.flags.dead) return;
+    seat.meta.hunterQueued = true;
+    if(!state.once.hunterQueue.includes(seat.id)) state.once.hunterQueue.push(seat.id);
+    try{ save(); }catch(e){}
+  }catch(e){}
+};
+
+
+  function enqueueScan(){
+    try{
+      if(!window.state || !state.seats) return;
+      ensureQueue();
+      for(const s of state.seats){
+        const isHunter = /^Sensenträger$/i.test((s.role||"").trim());
+        if(isHunter && s.flags && s.flags.dead){
+          window.__queueHunterOnDeath(s);
+        }
+      }
+    }catch(e){}
+  }
+
+  function processQueue(){
+    try{
+      if(!window.state) return;
+      ensureQueue();
+      if(state.dark) return;                       // Nur am Tag abarbeiten
+      if(window.__hunterOverlayOpen) return;
+      if(!state.once.hunterQueue.length) return;
+
+      const id = state.once.hunterQueue.shift();
+      const h = state.seats.find(s=> s.id===id);
+      if(!h){ processQueue(); return; }
+      const role = (h.role||'').trim();
+      if(!/^Sensenträger$/i.test(role) || !h.flags || !h.flags.dead){ processQueue(); return; }
+      h.meta = h.meta || {};
+      if(h.meta.hunterShot){ processQueue(); return; }
+window.__hunterOverlayOpen = true;
+      const ov = $("overlay");
+      $("mt").textContent = (window.getRoleName&&window.getRoleName("Sensenträger"))||"Sensenträger";
+      $("mb").className = "big";
+      $("mb").textContent = (window.t&&window.t("hunterCurseQueuedAsk"))||"Tödlichen Fluch aussprechen? (vom letzten Tod)";
+      $("mbtns").innerHTML = "";
+
+      const skip = document.createElement("button");
+      skip.className = "btn";
+      skip.textContent = (window.t&&window.t("skipButton"))||"Überspringen";
+      skip.onclick = ()=>{
+        try{ h.meta = h.meta || {}; h.meta.hunterShot = true; }catch(e){}
+        ov.style.display="none";
+        window.__hunterOverlayOpen = false;
+        setTimeout(processQueue,0);
+      };
+
+      const shoot = document.createElement("button");
+      shoot.className = "btn bad";
+      shoot.textContent = (window.t&&window.t("curseButton"))||"Verfluchen";
+      shoot.onclick = ()=>{
+        try{
+          h.meta = h.meta || {};
+          h.meta.hunterShot = true;
+          startPick(((window.getRoleName&&window.getRoleName("Sensenträger"))||"Sensenträger")+" – wähle 1", t=>{
+            applyKill(t,"HUNTER_SHOT"); save(); draw();
+          }, x=> !x.flags.dead && x!==h);
+        }finally{
+          ov.style.display="none";
+          window.__hunterOverlayOpen = false;
+          setTimeout(processQueue,0);
+        }
+      };
+
+      $("mbtns").append(skip, shoot);
+      ov.style.display = "flex";
+    }catch(e){
+      window.__hunterOverlayOpen = false;
+    }
+  }
+
+  // Patch draw() einmalig: erst scannen (einreihen), dann am Tag abarbeiten
+  if(typeof window.draw === "function" && !window.__drawPatchedHunterQueue){
+    window.__drawPatchedHunterQueue = true;
+    const __orig = window.draw;
+    window.draw = function(){
+      __orig();
+      try{ enqueueScan(); processQueue(); }catch(e){}
+    };
+  }
+})();
+</script>
+<script>
+(function(){
+  function prophetProgressCheck(){
+    try{
+      const once = (window.state && state.once) ? state.once : null;
+      if(!once) return;
+      const arr = once.ProphetTargets;
+      if(!Array.isArray(arr) || arr.length!==3) return;
+      const seats = (state && state.seats) ? state.seats : [];
+      const deadCnt = arr.filter(id => (seats.find(s=>s.id===id)||{}).flags?.dead).length;
+      if(typeof once.ProphetDeadCount!=="number") once.ProphetDeadCount = 0;
+      if(deadCnt > once.ProphetDeadCount){
+        once.ProphetDeadCount = deadCnt;
+        try{ if(typeof queueSfxKey==='function') queueSfxKey("sfxProphet1"); }catch(e){}
+      }
+      if(deadCnt === 3 && !once.ProphetUnlocked){
+        once.ProphetUnlocked = true;
+        try{ if(typeof queueSfxKey==='function') queueSfxKey("sfxProphet2"); }catch(e){}
+        try{ rebuildOrder(); }catch(e){}
+      }
+    }catch(e){}
+  }
+  window.prophetProgressCheck = prophetProgressCheck;
+  // Kein setInterval – prophetProgressCheck wird bereits von save() (state.js)
+  // und draw() (ui.js) aufgerufen. Das 700ms-Polling war redundant.
+})();
+</script>
+
+<script id="tooltip-script">
+if (!window.__rebuildWrappedTooltip) {
+  window.__rebuildWrappedTooltip = true;
+  var __origRebuild=window.rebuildOrder;
+  window.rebuildOrder=function(){
+    if(typeof __origRebuild==='function'){__origRebuild();}
+    attachAll();
+  };
+}
+document.addEventListener('DOMContentLoaded',attachAll);
+</script>
+
+
+
+
+
+
+
+
+<script>
+(function(){
+  try{
+    // White-Werwolf-Label-Override entfernt: Name bleibt einfach "Rachsüchtiger Wolf"
+  }catch(e){}
+})();
+</script>
+
+
+<script>
+
+// --- Erweiterung: OVERLAY-LAYER im #stage (klickbarer Kreis, Drag + Pfeiltasten) ---
+document.addEventListener('DOMContentLoaded', ()=>{
+  const STAGE = document.getElementById('stage');
+  if(!STAGE) return;
+
+  // Stelle sicher, dass #stage als Positionierungs-Referenz dient
+  if(getComputedStyle(STAGE).position === 'static'){
+    STAGE.style.position = 'relative';
+  }
+
+  function waitForSvgAndInit(attempt=0){
+    const svg = STAGE.querySelector('svg');
+    if(!svg){
+      if(attempt<150) return setTimeout(()=>waitForSvgAndInit(attempt+1), 100);
+      return;
+    }
+
+    // Erzeuge einen Overlay-Container, der den gesamten Stage-Bereich abdeckt
+    if(!document.getElementById('dragOverlay')){
+      const overlay = document.createElement('div');
+      overlay.id = 'dragOverlay';
+      overlay.style.position = 'absolute';
+      overlay.style.inset = '0';
+      overlay.style.zIndex = '9999';
+      // Standard: Klicks durchlassen, außer auf dem Handle
+      overlay.style.pointerEvents = 'none';
+      STAGE.appendChild(overlay);
+
+      // Das eigentliche Handle (sichtbarer Kreis) – nimmt die Klicks an
+      const handle = document.createElement('div');
+      handle.id = 'dragHandle';
+      handle.style.position = 'absolute';
+      handle.style.left = '50%';
+      handle.style.top = '50%';
+      handle.style.translate = '-50% -50%';
+      handle.style.width = '64px';
+      handle.style.height = '64px';
+      handle.style.borderRadius = '50%';
+      handle.style.background = 'radial-gradient(circle, rgba(100,160,255,0.85) 0%, rgba(50,90,180,0.75) 70%)';
+      handle.style.border = '3px solid #fff';
+      handle.style.boxShadow = '0 0 16px rgba(100,160,255,0.9)';
+      handle.style.cursor = 'grab';
+      handle.style.pointerEvents = 'auto';
+      handle.style.display = 'flex';
+      handle.style.alignItems = 'center';
+      handle.style.justifyContent = 'center';
+      handle.style.fontSize = '28px';
+      handle.style.fontWeight = 'bold';
+      handle.style.color = 'white';
+      handle.title = 'Ziehe oder nutze Pfeiltasten, um den Sitzkreis zu verschieben';
+      handle.textContent = '↕';
+      overlay.appendChild(handle);
+
+      let dragging=false;
+      let offX=0, offY=0;
+      let lastX=0, lastY=0;
+
+      // Verschiebe sämtliche Sitz-Elemente, egal ob sie x/y, cx/cy oder transform nutzen
+      function moveSeatsBy(dx, dy){
+        const els = svg.querySelectorAll('.seat, .ring, .plate, .num, .name, .role');
+        els.forEach(el=>{
+          if(el.hasAttribute('x') && el.hasAttribute('y')){
+            const x=parseFloat(el.getAttribute('x'))||0;
+            const y=parseFloat(el.getAttribute('y'))||0;
+            el.setAttribute('x', x+dx);
+            el.setAttribute('y', y+dy);
+          } else if(el.hasAttribute('cx') && el.hasAttribute('cy')){
+            const cx=parseFloat(el.getAttribute('cx'))||0;
+            const cy=parseFloat(el.getAttribute('cy'))||0;
+            el.setAttribute('cx', cx+dx);
+            el.setAttribute('cy', cy+dy);
+          } else {
+            let t = el.getAttribute('transform') || 'translate(0,0)';
+            const m = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(t);
+            let cx=0, cy=0;
+            if(m){ cx=parseFloat(m[1]); cy=parseFloat(m[2]); }
+            el.setAttribute('transform', `translate(${cx+dx},${cy+dy})`);
+          }
+        });
+      }
+
+      function updateHandlePos(){
+        handle.style.left = `calc(50% + ${offX}px)`;
+        handle.style.top  = `calc(50% + ${offY}px)`;
+      }
+
+      handle.addEventListener('mousedown', (e)=>{
+        dragging = true;
+        handle.style.cursor = 'grabbing';
+        lastX = e.clientX;
+        lastY = e.clientY;
+        // Während des Drags alle Klicks unterdrücken, damit nichts anderes reagiert
+        overlay.style.pointerEvents = 'auto';
+      });
+
+      window.addEventListener('mousemove', (e)=>{
+        if(!dragging) return;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        offX += dx;
+        offY += dy;
+        moveSeatsBy(dx, dy);
+        updateHandlePos();
+      });
+
+      window.addEventListener('mouseup', ()=>{
+        if(dragging){
+          dragging = false;
+          handle.style.cursor = 'grab';
+          // Nach dem Drag wieder Klicks durchlassen
+          overlay.style.pointerEvents = 'none';
+        }
+      });
+
+      // Pfeiltasten – pixelgenaue Verschiebung (Shift = schnell)
+      window.addEventListener('keydown', (e)=>{
+        const step = e.shiftKey ? 10 : 2;
+        if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
+          e.preventDefault();
+          let dx=0, dy=0;
+          if(e.key==='ArrowLeft') dx = -step;
+          if(e.key==='ArrowRight') dx =  step;
+          if(e.key==='ArrowUp') dy  = -step;
+          if(e.key==='ArrowDown') dy=  step;
+          offX += dx;
+          offY += dy;
+          moveSeatsBy(dx, dy);
+          updateHandlePos();
+        }
+      });
+    }
+  }
+  waitForSvgAndInit();
+});
+// --- Ende Erweiterung ---
+
+
+
+
+
+
+
+
+
+</script>
+
+<!-- SAFE APPEND: Hunter override + WW charges ensure (non-invasive) -->
+<script>
+(function(){
+
+  function ensureWWCharges(){
+    try{
+      if(!window.state) return;
+      state.once = state.once || {};
+      if(typeof state.once.WhiteWolfCharges === "undefined"){
+        state.once.WhiteWolfCharges = 2;
+      }
+    }catch(e){}
+  }
+
+  // Make sure charges exist early and after draws
+  document.addEventListener("DOMContentLoaded", ensureWWCharges);
+})();
+</script>
+
+
+<script>
+(function(){
+  try{
+    var UNDO_LIMIT = 5;
+    var stack = [];
+    var restoring = false;
+
+    function pushSnapshot(){
+      if(restoring) return;
+      try{
+        if(!window.state) return;
+        var snap = JSON.stringify(window.state);
+        if(stack.length && stack[stack.length - 1] === snap) return;
+        stack.push(snap);
+        if(stack.length > UNDO_LIMIT) stack.shift();
+      }catch(e){}
+    }
+
+    if(window.state) pushSnapshot();
+
+    var origSave = window.save;
+    if(typeof origSave === "function" && !origSave.__undoWrappedV2){
+      window.save = function(){
+        pushSnapshot();
+        return origSave.apply(this, arguments);
+      };
+      origSave.__undoWrappedV2 = true;
+    }
+
+    var origUndo = window.undoOnce;
+    window.undoOnce = function(){
+      if(!stack.length){
+        if(typeof origUndo === "function") origUndo();
+        return;
+      }
+      var raw = stack.pop();
+      try{
+        restoring = true;
+        window.state = JSON.parse(raw);
+      }catch(e){
+        restoring = false;
+        return;
+      }
+      try{ if(typeof window.save === "function") window.save(); }catch(e){}
+      try{ if(typeof draw === "function") draw(); }catch(e){}
+      try{ if(typeof rebuildOrder === "function") rebuildOrder(); }catch(e){}
+      restoring = false;
+    };
+
+    var btn = document.getElementById("undoBtn");
+    if(btn && !btn.__undoBoundV2){
+      btn.__undoBoundV2 = true;
+      btn.addEventListener("click", function(){
+        try{ window.undoOnce(); }catch(e){}
+      });
+    }
+  }catch(e){}
+})();
+</script>
+
+  <div id="logOverlay" style="display:none">
+    <div id="logWindow">
+      <div id="logHeader">
+        <span data-i18n="logTitle">📜 Spiellog</span>
+        <button id="logClose">✕</button>
+      </div>
+      <div id="logClear"><button class="btn sm" id="logClearBtn" data-i18n="logClear">Log leeren</button></div>
+      <div id="logEntries"></div>
+    </div>
+  </div>
+
+<script>
+  // === LOG SYSTEM (nutzt gameLog aus gamelog.js: .entries und .add()) ===
+  // gameLog nicht überschreiben – gamelog.js setzt bereits das Objekt mit .add() und .entries
+
+  window.addLog = function(text){
+    try{
+      if(window.gameLog && typeof window.gameLog.add === 'function'){
+        window.gameLog.add('', String(text || ''));
+      }
+      renderLog();
+    }catch(e){}
+  };
+
+  window.renderLog = function(){
+    const el = document.getElementById('logEntries');
+    if(!el) return;
+    const entries = (window.gameLog && Array.isArray(window.gameLog.entries)) ? window.gameLog.entries : [];
+    if(!entries.length){
+      el.innerHTML = '<div style="color:#5a6490;padding:16px;text-align:center;">' + (window.t ? window.t("logEmpty") : "No entries yet.") + '</div>';
+      return;
+    }
+    const pad = function(n){ return String(n).padStart(2,'0'); };
+    var esc = typeof window.escapeHtml === "function" ? window.escapeHtml : function(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); };
+    el.innerHTML = entries.slice().reverse().map(function(e){
+      const d = new Date(e.t);
+      const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
+      const phase = e.dark ? '🌙' : '☀️';
+      const nightNum = typeof e.night === 'number' ? e.night : '-';
+      const text = (e.icon ? e.icon + ' ' : '') + (e.text || '');
+      return '<div class="log-entry">' +
+        '<span class="log-time">' + time + '</span>' +
+        '<span class="log-phase">' + phase + ' ' + nightNum + '</span>' +
+        '<span class="log-text">' + esc(text) + '</span>' +
+        '</div>';
+    }).join('');
+  };
+
+  window.addEventListener('load', function(){
+    // Log-Button öffnet Fenster
+    const logBtn = document.getElementById('logBtn');
+    if(logBtn){
+      logBtn.addEventListener('click', function(){
+        const ov = document.getElementById('logOverlay');
+        if(!ov) return;
+        renderLog();
+        ov.style.display = ov.style.display === 'flex' ? 'none' : 'flex';
+        if(ov.style.display === 'flex'){
+          ov.style.display = 'flex';
+        }
+      });
+    }
+
+    // X schließt Fenster
+    const logClose = document.getElementById('logClose');
+    if(logClose){
+      logClose.addEventListener('click', function(){
+        document.getElementById('logOverlay').style.display = 'none';
+      });
+    }
+
+    // Log leeren Button
+    const logClearBtn = document.getElementById('logClearBtn');
+    if(logClearBtn){
+      logClearBtn.addEventListener('click', function(){
+        if(window.gameLog && Array.isArray(window.gameLog.entries)) window.gameLog.entries.length = 0;
+        if(window.gameLog && typeof window.gameLog.render === 'function') window.gameLog.render();
+        renderLog();
+      });
+    }
+
+    // Klick auf Overlay-Hintergrund schließt
+    const logOverlay = document.getElementById('logOverlay');
+    if(logOverlay){
+      logOverlay.addEventListener('click', function(e){
+        if(e.target === logOverlay) logOverlay.style.display = 'none';
+      });
+    }
+
+    // Log-Einträge automatisch bei wichtigen Ereignissen
+    // applyKill patchen
+    const _origApplyKill = window.applyKill;
+    if(typeof _origApplyKill === 'function' && !_origApplyKill.__logPatched){
+      window.applyKill = function(seat, cause){
+        const result = _origApplyKill.apply(this, arguments);
+        if(result){
+          const name = seat ? (seat.name || ('Sitz ' + seat.id)) : '?';
+          const causeMap = {
+            'LYNCH': window.t ? window.t('logLynched') : 'wurde gelyncht',
+            'NIGHT_KILL': window.t ? window.t('logNightKilled') : 'was killed at night',
+            'HUNTER_SHOT': window.t ? window.t('logHunterShot') : 'wurde vom Sensenträger geerntet',
+            'WITCH_POISON': window.t ? window.t('logWitchPoison') : 'wurde von der Waldhexe vergiftet',
+            'LOVER_HEARTBREAK': window.t ? window.t('logLoverHeartbreak') : 'starb aus Liebeskummer',
+            'MARTYR_SACRIFICE': window.t ? window.t('logMartyrSacrifice') : 'sacrificed as Martyr',
+            'BURN_SPREAD': window.t ? window.t('logBurnSpread') : 'verbrannte',
+            'BESESSENER_WOLF': window.t ? window.t('logPossessedWolf') : 'wurde vom Besessenen Wolf mitgerissen',
+            'BUSDRIVER_LYNCH': window.t ? window.t('logBusdriverLynch') : 'starb als Nachbar des Wahnsinnigen Kutschers',
+            'SPIEGELWOLF_RETALIATE': window.t ? window.t('logMirrorWolf') : 'was reflected by Mirror Wolf',
+            'BLOODPRIEST_SACRIFICE': window.t ? window.t('logBloodpriest') : 'wurde vom Blutpriester geopfert',
+            'VOODOO_PUPPET': window.t ? window.t('logVoodooPuppet') : 'starb als Voodoo-Puppe',
+            'RITTER_RETALIATE': window.t ? window.t('logRitter') : 'wurde vom Ritter erschlagen',
+          };
+          const causeText = causeMap[cause] || (window.tf ? window.tf('logDiedGeneric', { cause: cause }) : ('starb (' + cause + ')'));
+          addLog('☠ ' + name + ' ' + causeText);
+        }
+        return result;
+      };
+      window.applyKill.__logPatched = true;
+    }
+
+    // Nacht-/Tagbeginn nur in night.js loggen – hier keine doppelte addLog mehr
+  });
+</script>
+
+<div id="portraitHint">
+  <div id="portraitHintInner">
+    <div style="font-size:48px">🔄</div>
+    <div data-i18n="holdLandscapeRotate">Bitte Gerät drehen</div>
+    <div style="font-size:13px;opacity:0.6;margin-top:8px" data-i18n="holdLandscapeBody">Grimmhain funktioniert nur im Querformat</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  // i18n
+  var lang = 'de';
+  try { lang = localStorage.getItem('grimmhain_lang') || 'de'; } catch(e) {}
+  if (typeof window.applyTranslations === 'function') window.applyTranslations();
+  if (typeof window.installI18nObserver === 'function') window.installI18nObserver();
+
+  // Game Gear panel
+  var gameGearBtn   = document.getElementById('gameGearBtn');
+  var gameGearPanel = document.getElementById('gameGearPanel');
+  var gameScale     = document.getElementById('gameScale');
+  var gameRatio     = document.getElementById('gameRatio');
+  var scale         = document.getElementById('scale');
+  var ratio         = document.getElementById('ratio');
+  var timerIn       = document.getElementById('timerIn');
+  var tStart        = document.getElementById('tStart');
+  var tReset        = document.getElementById('tReset');
+  var fitBtn        = document.getElementById('fitBtn');
+  var undoBtn       = document.getElementById('undoBtn');
+  var showRolesBtnMain = document.getElementById('showRolesBtn');
+  var gameAutoFitBtn   = document.getElementById('gameAutoFitBtn');
+  var gameUndoBtn      = document.getElementById('gameUndoBtn');
+  var gameShowRolesBtn = document.getElementById('gameShowRolesBtn');
+  var gameClearRolesBtn= document.getElementById('gameClearRolesBtn');
+  var gameAddSeatBtn   = document.getElementById('gameAddSeatBtn');
+  var gameTimerUpBtn   = document.getElementById('gameTimerUpBtn');
+  var gameTimerDownBtn = document.getElementById('gameTimerDownBtn');
+  var gameTimerStartBtn= document.getElementById('gameTimerStartBtn');
+  var gameTimerResetBtn= document.getElementById('gameTimerResetBtn');
+
+  function dispatchInput(el){ if(el) el.dispatchEvent(new Event('input',{bubbles:true})); }
+
+  function parseMMSS(v){
+    var m=/^(\d{1,2}):([0-5]\d)$/.exec(String(v||'').trim());
+    return m?(+m[1])*60+(+m[2]):0;
+  }
+  function fmtMMSS(sec){
+    sec=Math.max(0,Math.min(59*60+59,sec|0));
+    return String((sec/60)|0).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+  }
+  function adjustTimer(delta){
+    if(!timerIn) return;
+    timerIn.value=fmtMMSS(parseMMSS(timerIn.value||'00:00')+delta);
+  }
+
+  function askConfirmCentered(message,onYes){
+    var ov=document.getElementById('overlay');
+    var mt=document.getElementById('mt');
+    var mb=document.getElementById('mb');
+    var mbtns=document.getElementById('mbtns');
+    if(!ov||!mt||!mb||!mbtns){if(window.confirm(message))onYes&&onYes();return;}
+    mt.textContent=window.t?window.t('setupHintTitle'):'Hinweis';
+    mb.className='big'; mb.textContent=message; mbtns.innerHTML='';
+    var noBtn=document.createElement('button'); noBtn.className='btn';
+    noBtn.textContent=window.t?window.t('no'):'Nein';
+    noBtn.onclick=function(){ov.style.display='none';};
+    var yesBtn=document.createElement('button'); yesBtn.className='btn good';
+    yesBtn.textContent=window.t?window.t('yes'):'Ja';
+    yesBtn.onclick=function(){ov.style.display='none';onYes&&onYes();};
+    mbtns.append(noBtn,yesBtn); ov.style.display='flex';
+  }
+
+  function askSeatNumberCentered(onSubmit){
+    var ov=document.getElementById('overlay');
+    var mt=document.getElementById('mt');
+    var mb=document.getElementById('mb');
+    var mbtns=document.getElementById('mbtns');
+    var ask=window.t?window.t('whichSeatNumber'):'Welche Nummer?';
+    if(!ov||!mt||!mb||!mbtns){var raw=window.prompt(ask,'#7');if(raw==null)return;onSubmit&&onSubmit(raw);return;}
+    mt.textContent=ask; mb.className='big';
+    mb.innerHTML='<input id="seatNumberInput" type="text" value="#7" style="width:100%;max-width:360px;padding:10px 12px;border-radius:10px;border:1px solid #4a5390;background:#0f142e;color:#e8ecff;font-size:22px;">';
+    mbtns.innerHTML='';
+    var cancelBtn=document.createElement('button'); cancelBtn.className='btn';
+    cancelBtn.textContent=window.t?window.t('cancel'):'Abbrechen';
+    cancelBtn.onclick=function(){ov.style.display='none';};
+    var okBtn=document.createElement('button'); okBtn.className='btn good'; okBtn.textContent='OK';
+    okBtn.onclick=function(){var v=document.getElementById('seatNumberInput');ov.style.display='none';onSubmit&&onSubmit(v?v.value:'');};
+    mbtns.append(cancelBtn,okBtn); ov.style.display='flex';
+  }
+
+  // Game Gear
+  if(gameGearBtn&&gameGearPanel){
+    gameGearBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      gameGearPanel.style.display=gameGearPanel.style.display==='block'?'none':'block';
+    });
+    document.addEventListener('click',function(e){
+      if(gameGearPanel&&!gameGearPanel.contains(e.target)&&e.target!==gameGearBtn)
+        gameGearPanel.style.display='none';
+    });
+  }
+  if(gameScale&&scale){
+    gameScale.addEventListener('input',function(){scale.value=gameScale.value;dispatchInput(scale);});
+    scale.addEventListener('input',function(){gameScale.value=scale.value;});
+  }
+  if(gameRatio&&ratio){
+    gameRatio.addEventListener('input',function(){ratio.value=gameRatio.value;dispatchInput(ratio);});
+    ratio.addEventListener('input',function(){gameRatio.value=ratio.value;});
+  }
+  if(gameAutoFitBtn&&fitBtn){ gameAutoFitBtn.addEventListener('click',function(){fitBtn.click();setTimeout(function(){if(gameScale&&scale)gameScale.value=scale.value;if(gameRatio&&ratio)gameRatio.value=ratio.value;},50);}); }
+  if(gameUndoBtn&&undoBtn) gameUndoBtn.addEventListener('click',function(){undoBtn.click();});
+  if(gameShowRolesBtn&&showRolesBtnMain) gameShowRolesBtn.addEventListener('click',function(){showRolesBtnMain.click();});
+  if(gameClearRolesBtn){
+    gameClearRolesBtn.addEventListener('click',function(){
+      var msg=window.t?window.t('confirmClearRoles'):'Bist du dir sicher?';
+      askConfirmCentered(msg,function(){
+        var b=document.getElementById('clearRolesBtn');if(b)b.click();
+      });
+    });
+  }
+  if(gameAddSeatBtn){
+    gameAddSeatBtn.addEventListener('click',function(){
+      askSeatNumberCentered(function(raw){
+        var parsed=parseInt(String(raw).replace(/[^\d]/g,''),10);
+        if(!parsed||!Array.isArray(state.seats)) return;
+        var pos=Math.max(1,Math.min(state.seats.length+1,parsed));
+        var oldSeats=state.seats.slice(); var newSeats=[];
+        for(var i=1;i<=oldSeats.length+1;i++){
+          if(i===pos){
+            newSeats.push({id:i,name:'',role:'',
+              flags:{dead:false,protected:false,targeted:false,inlove:false,rival:false,werewolf:false,vorbild:false,nominated:false,charmed:false,poisoned:false,burned:false,puppet:false,hmark:false},
+              meta:{cerbHeads:0,killedTonight:false,cursedWolfAura:false,rivalId:null,loverId:null,unholy:false,blockedTonight:false}});
+          }else{
+            var from=oldSeats[i<pos?i-1:i-2];
+            var copy=JSON.parse(JSON.stringify(from)); copy.id=i; newSeats.push(copy);
+          }
+        }
+        state.seats=newSeats;
+        var cnt=document.getElementById('count'); if(cnt) cnt.value=state.seats.length;
+        if(typeof save==='function') save();
+        if(typeof draw==='function') draw();
+        if(typeof rebuildOrder==='function') rebuildOrder();
+      });
+    });
+  }
+  if(gameTimerUpBtn)   gameTimerUpBtn.addEventListener('click',function(){adjustTimer(+10);});
+  if(gameTimerDownBtn) gameTimerDownBtn.addEventListener('click',function(){adjustTimer(-10);});
+  if(gameTimerStartBtn&&tStart) gameTimerStartBtn.addEventListener('click',function(){tStart.click();});
+  if(gameTimerResetBtn&&tReset) gameTimerResetBtn.addEventListener('click',function(){tReset.click();});
+
+  // Sync gear sliders
+  if(gameScale&&scale) gameScale.value=scale.value;
+  if(gameRatio&&ratio) gameRatio.value=ratio.value;
+
+  // Game-Mode direkt aktivieren
+  document.body.classList.add('app-mode-game');
+
+  // autoFit nach kurzem Delay
+  setTimeout(function(){ try{ if(typeof autoFit==='function') autoFit(); }catch(e){} }, 100);
+
+})();
+</script>
+<script>
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
