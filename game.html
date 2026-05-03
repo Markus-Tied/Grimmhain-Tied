@@ -21,8 +21,10 @@
 </script>
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/screens.css">
 <script src="js/core/i18n.js"></script>
 <script src="js/core/roles.js"></script>
+<script src="js/core/role-abilities.js"></script>
 <script src="js/core/cards.js"></script>
 <script src="js/core/state.js"></script>
 <script src="js/ui/core.js"></script>
@@ -225,6 +227,9 @@ window.addEventListener("load", () => {
       <button class="btn sm" id="gameAddSeatBtn" data-i18n="addSeat">+ Sitzkreis</button>
     </div>
     <div class="game-gear-row game-gear-actions">
+      <button class="btn sm bad" id="gameNewGameBtn">🔄 Neues Spiel</button>
+    </div>
+    <div class="game-gear-row game-gear-actions">
       <button class="btn sm" id="gameTimerDownBtn">▼</button>
       <button class="btn sm" id="gameTimerUpBtn">▲</button>
       <button class="btn sm" id="gameTimerStartBtn" data-i18n="timerStart">Start</button>
@@ -243,8 +248,13 @@ window.addEventListener("load", () => {
   <!-- Identity: Name + Rolle -->
   <div class="pop-identity">
     <div class="pill"><span>👤</span><input id="pname" placeholder="Name" data-i18n-placeholder="name"></div>
-    <div class="pill"><span>🎭</span><input id="prole" list="roleList" placeholder="Rolle" data-i18n-placeholder="role"></div>
+    <div class="pill pill--role" id="proleDisplay" onclick="openRolePicker()">
+      <span>🎭</span>
+      <span id="proleLabel" class="prole-label prole-label--empty">Rolle wählen</span>
+      <span class="prole-edit">✏</span>
+    </div>
   </div>
+  <input type="hidden" id="prole" value="">
   <datalist id="roleList"></datalist>
 
   <!-- Flags in 4 Gruppen -->
@@ -296,6 +306,40 @@ window.addEventListener("load", () => {
     <button class="btn good" id="psave" data-i18n="apply">Übernehmen</button>
   </div>
 </div>
+<div id="rolePicker" class="rp-overlay" style="display:none" onclick="if(event.target===this)closeRolePicker()">
+  <div class="rp-panel">
+    <div class="rp-left">
+      <div class="rp-header">
+        <span id="rpSeatLabel" class="rp-title">Sitz — Rolle wählen</span>
+        <button class="rp-close" onclick="closeRolePicker()">✕</button>
+      </div>
+      <input type="search" id="rpSearch" class="rp-search" placeholder="Rolle suchen..." oninput="filterPicker()">
+      <div class="rp-filters" id="rpFilters">
+        <button class="rp-pill rp-pill--active rp-pill--all" data-faction="all" onclick="setPickerFaction('all')">Alle</button>
+        <button class="rp-pill" data-faction="dorf" onclick="setPickerFaction('dorf')">Dorf</button>
+        <button class="rp-pill" data-faction="wolf" onclick="setPickerFaction('wolf')">Wolf</button>
+        <button class="rp-pill" data-faction="solo" onclick="setPickerFaction('solo')">Solo</button>
+      </div>
+      <div id="rpList" class="rp-list">
+        <div id="rpListCol0" class="rp-list-col"></div>
+        <div id="rpListCol1" class="rp-list-col"></div>
+      </div>
+    </div>
+    <div id="rpDetail" class="rp-detail">
+      <div id="rpDetailCardWrap" class="rp-detail-card-wrap">
+        <img id="rpDetailImg" class="rp-detail-img" src="" alt="">
+        <span id="rpDetailEmpty" class="rp-detail-empty">Rolle<br>auswählen</span>
+      </div>
+      <div class="rp-detail-name" id="rpDetailName">—</div>
+      <div class="rp-detail-badges" id="rpDetailBadges"></div>
+      <div class="rp-detail-night" id="rpDetailNight"></div>
+      <div class="rp-detail-ability" id="rpDetailAbility"></div>
+      <button id="rpSelectBtn" class="rp-select-btn" onclick="confirmRolePicker()" disabled>Rolle wählen</button>
+    </div>
+  </div>
+</div>
+
+
 <div id="overlay" class="overlay"><div class="modal"><h3 id="mt">Info</h3><div id="mb" class="big">—</div>
 <div id="mbtns" class="bar2"></div></div></div>
 
@@ -384,6 +428,7 @@ function openPop(i,x,y,seatR){
   $("pnum").textContent=currentSeat.id
   $("pname").value=currentSeat.name||""
   $("prole").value=currentSeat.role||""
+  var _pl=$("proleLabel"); if(_pl){_pl.textContent=currentSeat.role||"Rolle wählen"; _pl.className="prole-label"+(currentSeat.role?"":" prole-label--empty");}
   Array.from($("pop").querySelectorAll(".chip")).forEach(ch=>{
     const k=ch.dataset.flag;ch.classList.toggle("active",!!currentSeat.flags[k])
     ch.onclick=()=>{currentSeat.flags[k]=!currentSeat.flags[k];if(k==="nominated"&&currentSeat.role==="Manipulator"&&currentSeat.flags.nominated){state.once=state.once||{};state.once.ManipulatorWasNominated=true;try{applyKill(currentSeat,"MANIPULATOR_NOMINATED")}catch(e){}}ch.classList.toggle("active");save();draw();rebuildOrder()}
@@ -534,12 +579,31 @@ $("psave").onclick=savePop
 $("pclear").onclick=()=>{
   if(!currentSeat) return
   currentSeat.name=""; currentSeat.role=""
+  var _pl=$("proleLabel"); if(_pl){_pl.textContent="Rolle wählen"; _pl.className="prole-label prole-label--empty";} $("prole").value="";
   currentSeat.flags={dead:false,protected:false,targeted:false,inlove:false,rival:false,werewolf:false,vorbild:false,nominated:false,charmed:false,poisoned:false,burned:false,puppet:false,hmark:false,deadVoteStripped:false}
   currentSeat.meta={cerbHeads:0,killedTonight:false,cursedWolfAura:false,rivalId:null,unholy:false,blockedTonight:false}
   save(); draw(); rebuildOrder()
 }
 window.addEventListener("resize", draw)
-document.addEventListener("keydown",(e)=>{if(e.key==="Escape"){ endPick(); hidePickBar(); closePop() }})
+document.addEventListener("keydown",(e)=>{
+  const pickerOpen=$("rolePicker")&&$("rolePicker").style.display!=="none";
+  if(e.key==="Escape"){if(pickerOpen){closeRolePicker();return}; endPick(); hidePickBar(); closePop(); return}
+  if(pickerOpen&&["ArrowDown","ArrowUp","ArrowLeft","ArrowRight","Enter"].includes(e.key)){
+    e.preventDefault();
+    if(e.key==="Enter"){confirmRolePicker();return;}
+    var sel=document.querySelector(".rp-item--selected");
+    var col=sel?parseInt(sel.dataset.col):0;
+    var row=sel?parseInt(sel.dataset.row):-1;
+    if(e.key==="ArrowDown")row++;
+    else if(e.key==="ArrowUp")row=Math.max(0,row-1);
+    else if(e.key==="ArrowRight")col=Math.min(1,col+1);
+    else if(e.key==="ArrowLeft")col=Math.max(0,col-1);
+    if(!_rpCols[col]||!_rpCols[col].length)return;
+    row=Math.max(0,Math.min(row,_rpCols[col].length-1));
+    var target=_rpCols[col][row];
+    if(target){var r=target.dataset.role;highlightRole(r,true);_updateListSelection(r);target.scrollIntoView({block:"nearest"});}
+  }
+})
 fillRoleDatalist()
 $("count").value=state.seats.length
 $("scale").value=state.layout.scale; $("scaleVal").textContent=state.layout.scale+"%"
@@ -548,6 +612,162 @@ $("offx").value=state.layout.offx; $("offxVal").textContent=Math.round(state.lay
 $("offy").value=state.layout.offy; $("offyVal").textContent=Math.round(state.layout.offy)+"px"
 initBackgrounds(function(){applyBg(document.body.classList.contains("is-day"))})
 draw();rebuildOrder()
+
+var _rpFaction="all";
+var _rpHighlighted=null;
+var _rpCols=[[],[]]; // [colIdx][rowIdx] → button element
+
+var _RP_FC={
+  dorf:{border:"#BA7517",text:"#EF9F27",grad:"linear-gradient(180deg,#2a1f0a 0%,#1a1408 100%)",label:"Dorf"},
+  wolf:{border:"#A32D2D",text:"#E24B4A",grad:"linear-gradient(180deg,#2a0a0a 0%,#1a0808 100%)",label:"Wolf"},
+  solo:{border:"#534AB7",text:"#7F77DD",grad:"linear-gradient(180deg,#1a0a2a 0%,#0d0518 100%)",label:"Solo"}
+};
+
+function openRolePicker(){
+  if(!currentSeat)return;
+  var lbl=$("rpSeatLabel"); if(lbl)lbl.textContent="Sitz "+currentSeat.id+(currentSeat.name?" — "+currentSeat.name:"");
+  _rpFaction="all";
+  _rpHighlighted=currentSeat.role||null;
+  var s=$("rpSearch"); if(s)s.value="";
+  setPickerFaction("all"); // builds list, sets _rpCols
+  if(_rpHighlighted){
+    highlightRole(_rpHighlighted,true);
+    setTimeout(function(){var sel=document.querySelector(".rp-item--selected");if(sel)sel.scrollIntoView({block:"nearest"});},60);
+  } else if(_rpCols[0]&&_rpCols[0][0]){
+    var first=_rpCols[0][0].dataset.role;
+    highlightRole(first,true);
+    _updateListSelection(first);
+  }
+  $("rolePicker").style.display="flex";
+  setTimeout(function(){var s=$("rpSearch");if(s)s.focus();},50);
+}
+function closeRolePicker(){$("rolePicker").style.display="none";}
+function confirmRolePicker(){if(_rpHighlighted)selectRole(_rpHighlighted);}
+function selectRole(roleName){
+  if(!currentSeat)return;
+  var prev=currentSeat.role;
+  currentSeat.role=roleName;
+  currentSeat.flags.werewolf=(typeof WOLF_ROLES_SET!=="undefined"&&WOLF_ROLES_SET.has(roleName));
+  if(prev!=="Der Weise"&&roleName==="Der Weise")currentSeat.flags.protected=true;
+  $("prole").value=roleName;
+  var pl=$("proleLabel"); if(pl){pl.textContent=roleName;pl.className="prole-label";}
+  save();draw();closeRolePicker();rebuildOrder();
+}
+
+function highlightRole(roleName,skipListUpdate){
+  _rpHighlighted=roleName;
+  var wrap=$("rpDetailCardWrap");
+  var img=$("rpDetailImg");
+  var empty=$("rpDetailEmpty");
+  var nameEl=$("rpDetailName");
+  var badges=$("rpDetailBadges");
+  var nightEl=$("rpDetailNight");
+  var abilEl=$("rpDetailAbility");
+  var btn=$("rpSelectBtn");
+  if(!roleName){
+    img.style.display="none"; empty.style.display="";
+    nameEl.textContent="—"; nameEl.style.color="";
+    if(wrap)wrap.className="rp-detail-card-wrap";
+    badges.replaceChildren(); nightEl.textContent=""; abilEl.textContent="";
+    btn.disabled=true;
+    if(!skipListUpdate)_updateListSelection(null);
+    return;
+  }
+  img.src=roleToImagePath(roleName); img.alt=roleName;
+  img.style.display="block"; empty.style.display="none";
+  var f=(typeof getRoleFaction==="function")?getRoleFaction(roleName):"dorf";
+  var c=_RP_FC[f]||_RP_FC.dorf;
+  if(wrap)wrap.className="rp-detail-card-wrap faction-"+f;
+  nameEl.textContent=roleName; nameEl.style.color=c.text;
+  badges.replaceChildren();
+  var badge=document.createElement("span"); badge.className="rp-faction-badge";
+  badge.textContent=c.label; badge.style.color=c.text; badge.style.borderColor=c.border;
+  badges.appendChild(badge);
+  var tier=null;
+  if(typeof ORDER_BASE!=="undefined"){var oe=ORDER_BASE.find(function(e){return e.r===roleName;});if(oe)tier=oe.tier;}
+  nightEl.textContent=tier!==null?"Nacht-Position: "+tier:"";
+  var abilText=(window.ROLE_ABILITIES&&window.ROLE_ABILITIES[roleName])||
+    (window.GRIMM_ROLE_TAGS&&window.GRIMM_ROLE_TAGS[roleName]&&window.GRIMM_ROLE_TAGS[roleName].join(" · "))||"";
+  abilEl.textContent=abilText;
+  btn.disabled=false;
+  if(!skipListUpdate)_updateListSelection(roleName);
+}
+
+function _updateListSelection(roleName){
+  document.querySelectorAll(".rp-item").forEach(function(btn){
+    btn.classList.toggle("rp-item--selected",btn.dataset.role===roleName);
+  });
+}
+
+function setPickerFaction(faction){
+  _rpFaction=faction;
+  document.querySelectorAll(".rp-pill").forEach(function(btn){
+    var f=btn.dataset.faction;
+    btn.className="rp-pill"+(f===faction?" rp-pill--active rp-pill--"+f:"");
+  });
+  renderRoleList();
+}
+function filterPicker(){renderRoleList();}
+
+function renderRoleList(){
+  var q=($("rpSearch").value||"").toLowerCase().trim();
+  var faction=_rpFaction;
+  function match(r){return !q||r.toLowerCase().indexOf(q)!==-1;}
+  // update pill counts
+  document.querySelectorAll(".rp-pill").forEach(function(pill){
+    var f=pill.dataset.faction;
+    var cnt=ALL_ROLES.filter(function(r){return(f==="all"||getRoleFaction(r)===f)&&match(r);}).length;
+    var lbl=f==="all"?"Alle":f==="dorf"?"Dorf":f==="wolf"?"Wolf":"Solo";
+    pill.textContent=lbl+" "+cnt;
+  });
+  // sort: dorf alpha → wolf alpha → solo alpha
+  var order=["dorf","wolf","solo"];
+  var sorted=ALL_ROLES
+    .filter(function(r){return(faction==="all"||getRoleFaction(r)===faction)&&match(r);})
+    .sort(function(a,b){
+      var oa=order.indexOf(getRoleFaction(a)),ob=order.indexOf(getRoleFaction(b));
+      if(oa!==ob)return oa-ob;
+      return a.localeCompare(b,"de");
+    });
+  var half=Math.ceil(sorted.length/2);
+  var cols=[sorted.slice(0,half),sorted.slice(half)];
+  _rpCols=[[],[]];
+  var col0=$("rpListCol0"); var col1=$("rpListCol1");
+  col0.replaceChildren(); col1.replaceChildren();
+  cols.forEach(function(roles,ci){
+    var colEl=ci===0?col0:col1;
+    roles.forEach(function(r,ri){
+      var btn=_makeListItem(r,ci,ri);
+      colEl.appendChild(btn);
+      _rpCols[ci].push(btn);
+    });
+  });
+  _updateListSelection(_rpHighlighted);
+}
+
+function _makeListItem(r,colIdx,rowIdx){
+  var f=(typeof getRoleFaction==="function")?getRoleFaction(r):"dorf";
+  var btn=document.createElement("button");
+  btn.className="rp-item"; btn.dataset.role=r; btn.dataset.faction=f;
+  btn.dataset.col=colIdx; btn.dataset.row=rowIdx; btn.title=r;
+  // thumbnail
+  var thumb=document.createElement("div"); thumb.className="rp-item-thumb";
+  var img=document.createElement("img"); img.className="rp-item-img";
+  img.src=roleToImagePath(r); img.alt=r;
+  img.addEventListener("error",function(){this.style.display="none";});
+  thumb.appendChild(img);
+  // text
+  var text=document.createElement("div"); text.className="rp-item-text";
+  var name=document.createElement("span"); name.className="rp-item-name"; name.textContent=r;
+  text.appendChild(name);
+  // night order
+  var night=document.createElement("span"); night.className="rp-item-night";
+  if(typeof ORDER_BASE!=="undefined"){var oe=ORDER_BASE.find(function(e){return e.r===r;});if(oe)night.textContent="N "+oe.tier;}
+  btn.appendChild(thumb); btn.appendChild(text); btn.appendChild(night);
+  btn.addEventListener("click",function(){highlightRole(r,true);_updateListSelection(r);});
+  btn.addEventListener("dblclick",function(){selectRole(r);});
+  return btn;
+}
 
 ;(function(){
   var setupModal = document.getElementById("setupModal");
@@ -1736,7 +1956,7 @@ const nightBtn = document.getElementById("startNight");
   const $ = id => document.getElementById(id);
 
   function ensureQueue(){
-    if(!window.state) return;
+    if(!state) return;
     state.once = state.once || {};
     state.once.hunterQueue = state.once.hunterQueue || [];
   }
@@ -1760,7 +1980,7 @@ const nightBtn = document.getElementById("startNight");
 
   function enqueueScan(){
     try{
-      if(!window.state || !state.seats) return;
+      if(!state || !state.seats) return;
       ensureQueue();
       for(const s of state.seats){
         const isHunter = /^Sensenträger$/i.test((s.role||"").trim());
@@ -1773,7 +1993,7 @@ const nightBtn = document.getElementById("startNight");
 
   function processQueue(){
     try{
-      if(!window.state) return;
+      if(!state) return;
       ensureQueue();
       if(state.dark) return;                       // Nur am Tag abarbeiten
       if(window.__hunterOverlayOpen) return;
@@ -1811,7 +2031,7 @@ window.__hunterOverlayOpen = true;
           h.meta = h.meta || {};
           h.meta.hunterShot = true;
           startPick(((window.getRoleName&&window.getRoleName("Sensenträger"))||"Sensenträger")+" – wähle 1", t=>{
-            applyKill(t,"HUNTER_SHOT"); save(); draw();
+            applyKill(t,"HUNTER_SHOT"); save(); draw(); if(typeof postDeathHooks==="function") postDeathHooks();
           }, x=> !x.flags.dead && x!==h);
         }finally{
           ov.style.display="none";
@@ -1827,13 +2047,23 @@ window.__hunterOverlayOpen = true;
     }
   }
 
-  // Patch draw() einmalig: erst scannen (einreihen), dann am Tag abarbeiten
+  // processQueue am Tag-Start aufrufen (nicht bei jedem draw)
+  window.__processHunterQueue = processQueue;
+
+  // Einmalig nach Page-Load: Queue verarbeiten falls bereits Tag (z.B. nach Seite neu laden)
+  setTimeout(function(){
+    try{
+      if(state && !state.dark) processQueue();
+    }catch(e){}
+  }, 800);
+
+  // Patch draw() einmalig: nur einreihen, nicht verarbeiten
   if(typeof window.draw === "function" && !window.__drawPatchedHunterQueue){
     window.__drawPatchedHunterQueue = true;
     const __orig = window.draw;
     window.draw = function(){
       __orig();
-      try{ enqueueScan(); processQueue(); }catch(e){}
+      try{ enqueueScan(); }catch(e){}
     };
   }
 })();
@@ -2397,6 +2627,16 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(gameTimerDownBtn) gameTimerDownBtn.addEventListener('click',function(){adjustTimer(-10);});
   if(gameTimerStartBtn&&tStart) gameTimerStartBtn.addEventListener('click',function(){tStart.click();});
   if(gameTimerResetBtn&&tReset) gameTimerResetBtn.addEventListener('click',function(){tReset.click();});
+  var gameNewGameBtn = document.getElementById('gameNewGameBtn');
+  if(gameNewGameBtn){
+    gameNewGameBtn.addEventListener('click',function(){
+      var msg = window.t ? window.t('confirmNewGame') : 'Neues Spiel starten? Alle Spieldaten werden gelöscht.';
+      askConfirmCentered(msg, function(){
+        try{ localStorage.removeItem('uw_custom_v16'); }catch(e){}
+        window.location.href = 'index.html';
+      });
+    });
+  }
 
   // Sync gear sliders
   if(gameScale&&scale) gameScale.value=scale.value;

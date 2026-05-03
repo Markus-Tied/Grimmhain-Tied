@@ -263,7 +263,7 @@ function hexeAskDeath(pick){
   yes.disabled=!!state.once.WaldhexeD && !(state.ui&&state.ui.ghostCasting)
   document.getElementById("mbtns").append(no,yes);ov.style.display="flex"
 }
-const SOLO_WIN_ROLES = new Set(["Selbstmörder","Rattenfänger","Pestbringerin","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Hades","Kartenschlucker","Nekromant","Manipulator","Doppelspion","Grabräuber","Parasit","Todesprediger"]);
+const SOLO_WIN_ROLES = window.SOLO_WIN_ROLES; // authoritative definition in roles.js
 
 function abilityTeamOfSeat(s){
   const r=(s&&(s.role||"")).trim();

@@ -105,7 +105,7 @@ function applyKill(seat,cause){
       if(host&&!host.flags.dead&&cause!=="PARASITE_HOST")return false;
     }
     if(seat.role==="Rudelvater"&&!state.once.RudelvaterSavedOnce){
-      if(cause!=="NIGHT_KILL"&&cause!=="LYNCH"&&cause!=="PACKFATHER_KILL"){
+      if(cause!=="NIGHT_KILL"&&cause!=="LYNCH"&&cause!=="PACKFATHER_KILL"&&cause!=="GIFTWOLF_DELAY"){
         state.once.RudelvaterSavedOnce=true;
         if(typeof center==="function")center((window.t&&window.t("rudelvaterSurvived"))||"Rudelvater überlebt den ersten Tod durch eine Sonderfähigkeit.",true);
         return false;
@@ -280,7 +280,7 @@ function checkTeamWin(){
       if(!s||s.flags.dead) return false;
       const role=(s.role||"")+"";
       if(role==="Doppelspion"||role==="Manipulator"||role==="Parasit"||role==="Grabräuber"||role==="Todesprediger") return false;
-      return s.flags.werewolf || /wolf/i.test(role) || role==="König Lykaon" || role==="Schattenwanderer" || role==="Schwarze Witwe" || (s.meta && s.meta.cursedWolfAura);
+      return s.flags.werewolf || /wolf/i.test(role) || role==="König Lykaon" || role==="Schattenwanderer" || role==="Schwarze Witwe";
     };
     const hasRealRole=s=>((s.role||"").trim()!=="");
 
@@ -294,12 +294,12 @@ function checkTeamWin(){
     const anyWolfAssigned=assigned.some(s=>{
       const role=(s.role||"")+"";
       if(role==="Doppelspion"||role==="Manipulator"||role==="Parasit"||role==="Grabräuber"||role==="Todesprediger") return false;
-      return s.flags.werewolf || /wolf/i.test(role) || role==="König Lykaon" || role==="Schattenwanderer" || role==="Schwarze Witwe" || (s.meta && s.meta.cursedWolfAura);
+      return s.flags.werewolf || /wolf/i.test(role) || role==="König Lykaon" || role==="Schattenwanderer" || role==="Schwarze Witwe";
     });
     const anyOtherAssigned=assigned.some(s=>{
       const role=(s.role||"")+"";
       if(role==="Doppelspion"||role==="Manipulator"||role==="Parasit"||role==="Grabräuber"||role==="Todesprediger") return true;
-      return !(s.flags.werewolf || /wolf/i.test(role) || role==="König Lykaon" || role==="Schattenwanderer" || role==="Schwarze Witwe" || (s.meta && s.meta.cursedWolfAura));
+      return !(s.flags.werewolf || /wolf/i.test(role) || role==="König Lykaon" || role==="Schattenwanderer" || role==="Schwarze Witwe");
     });
     if(!(anyWolfAssigned && anyOtherAssigned)) return;
 
@@ -356,6 +356,7 @@ function resetOnceForInheritedRole(role){
 }
 
 function postDeathHooks(){
+  const _preHookDeadIds=new Set((state.seats||[]).filter(s=>s.flags.dead).map(s=>s.id));
   runDeathHooks()
 
     let loversTriggered=false;
@@ -379,45 +380,61 @@ function postDeathHooks(){
       });
     }while(changed);
   })();
-  if(loversTriggered){ queueSfxKey("sfxLovers"); try{ center((window.t&&window.t("loverHeartbreakCenter"))||"Verliebte – der/die andere stirbt aus Kummer", true) }catch(e){} }
+  if(loversTriggered){ queueSfxKey("sfxLovers"); }
 const mogli=state.seats.find(s=>s.role==="Wolfskind"&&!s.flags.dead)
   if(mogli&&state.once.MogliVorbildId){const v=state.seats.find(s=>s.id===state.once.MogliVorbildId);if(v&&v.flags.dead){if(typeof gatewardenBlocksNewWolves==="function"&&gatewardenBlocksNewWolves()){mogli.role="Dorfbewohner";mogli.flags.werewolf=false;mogli.flags.vorbild=false;try{ if(typeof center==="function") center((window.t&&window.t("gatewardenRedirectVillager"))||"Wächter am Tor: Neue Werwölfe sind blockiert. Der Spieler wird stattdessen zum Dorfbewohner.", false); }catch(e){}}else{mogli.flags.werewolf=true}}}
   if(state.once.LehrlingMentorId){const l=state.seats.find(s=>s.role==="Lehrling");const m=state.seats.find(s=>s.id===state.once.LehrlingMentorId);if(l&&m&&m.flags.dead&&l.role==="Lehrling"){const mentorIsWolf=isWolf(m);if(mentorIsWolf&&typeof gatewardenBlocksNewWolves==="function"&&gatewardenBlocksNewWolves()){l.role="Dorfbewohner";l.flags.werewolf=false;resetOnceForInheritedRole(l.role);rebuildOrder()}else{l.role=m.role;if(mentorIsWolf)l.flags.werewolf=true;resetOnceForInheritedRole(l.role);rebuildOrder()}}}
   try{
-    if(state && state.seats){
-      const isNight = !!state.dark;
+    if(state && state.seats && typeof window.__queueHunterOnDeath==="function"){
       state.seats.forEach(s=>{
-        const role = (s.role||"").trim();
-        if(!/^Sensenträger$/i.test(role)) return;
+        if(!/^Sensenträger$/i.test((s.role||"").trim())) return;
         if(!s.flags || !s.flags.dead) return;
-        s.meta = s.meta || {};
-        if(s.meta.hunterShot) return;
-        if(isNight){
-          if(typeof window.__queueHunterOnDeath==="function"){
-            window.__queueHunterOnDeath(s);
-          }
-        }else{
-          if(typeof triggerHunterOnce==="function"){
-            triggerHunterOnce(s);
-          }
-        }
+        window.__queueHunterOnDeath(s);
       });
     }
   }catch(e){}
   try{ maybeShowTodenkarten(); }catch(e){}
   doBearPing()
+  if(!state.once||!state.once._inNightResolution){
+    try{
+      const _newlyDead=(state.seats||[]).filter(s=>s.flags.dead&&!_preHookDeadIds.has(s.id));
+      if(_newlyDead.length&&typeof showDeathPopup==="function") showDeathPopup(_newlyDead);
+    }catch(e){}
+  }
 }
 
 function findNearestWolf(id){
   const n=state.seats.length
   const isWolfLocal=x=>x&&!x.flags.dead&&(x.flags.werewolf||/wolf/i.test(x.role)||(x.meta&&x.meta.cursedWolfAura))
-  const ok=x=>isWolfLocal(x)&&!(x.role==="Fenrir"&&state.fenrirStage>=2)
+  const ok=x=>isWolfLocal(x)&&!(x.role==="Fenrir"&&state.fenrirStage>=3)
   for(let d=1;d<n;d++){
     const L=state.seats[(id-1-d+n)%n],R=state.seats[(id-1+d)%n]
     if(ok(L)) return L
     if(ok(R)) return R
   }
   return null
+}
+
+function applyRitterRetaliationFromNight(){
+  const nightCauses = new Set(["NIGHT_KILL","BLACK_WIDOW","GIFTWOLF_DELAY","BURN_SPREAD","HADES_KILL","WITCH_POISON"]);
+  const knights = (state.seats||[]).filter(s =>
+    s.flags.dead && s.role === "Ritter" &&
+    s.meta && !s.meta.ritterRetaliated &&
+    nightCauses.has(s.meta.lastKillCause)
+  );
+  knights.forEach(knight => {
+    knight.meta.ritterRetaliated = true;
+    const wolf = findNearestWolf(knight.id);
+    if(wolf){
+      applyKill(wolf, "RITTER_RETALIATION");
+      try{
+        if(window.gameLog && typeof gameLog.add === "function"){
+          const wname = wolf.name || ("#"+wolf.id);
+          gameLog.add("⚔️", wname + " " + ((window.t&&window.t("logRitter"))||"wurde vom Ritter erschlagen"));
+        }
+      }catch(e){}
+    }
+  });
 }
 
 function spreadPoison(){

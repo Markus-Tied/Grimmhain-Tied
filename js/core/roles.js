@@ -114,7 +114,7 @@ window.ROLE_DESCRIPTIONS={
 "Schicksalswolf": "Wähle zu Beginn des Spiels drei Spieler. Für jeden von ihnen, der unter den ersten drei Toten ist, erhältst du in Nacht 4 die Möglichkeit, einen zusätzlichen Spieler zu reißen.",
 "Schattenwanderer": "Knüpft eine Todeskette mit einem anderen Spieler. Stirbt einer von euch, stirbt stattdessen der andere — und umgekehrt.",
 "Giftwolf": "Darf zweimal im Spiel ein Ziel mit seinen Giftpranken angreifen. Dieses erfährt davon und stirbt zwei Tage später.",
-"Rudelvater": "Überlebt den ersten Tod, der nicht durch Wolfsangriff oder Lynch verursacht wurde. Wird er gelyncht, erhalten die Werwölfe in der nächsten Nacht ein zweites Opfer; dieser zweite Angriff ignoriert allen Schutz.",
+"Rudelvater": "Überlebt den ersten Tod durch eine Sonderfähigkeit. Wird er jedoch gelyncht, dürfen die Werwölfe in der folgenden Nacht ein zusätzliches Opfer wählen. Dieser zweite Angriff ignoriert alle Schutzfähigkeiten.",
 "Schwarze Witwe": "Loki wird automatisch gewählt. Wähle jede Nacht einen Spieler. Findest du einen Verliebten oder Verhassten, sterben beide am folgenden Tag.",
 "Doktor": "Nimmt jede Nacht Blutproben von zwei Spielern und erfährt, ob sie demselben Team angehören.",
 "Fährtenleser": "Wacht jede Nacht auf und darf einmal im Spiel erfahren, in welche Richtung der nächstliegende Wolf von ihm sitzt: links oder rechts.",
@@ -278,7 +278,7 @@ window.ROLE_DESCRIPTIONS_EN = {
   "Detektiv": "After a wolf dies, a public clue about another wolf is revealed.",
   "Dorfschmied": "Forges a weapon over five nights. On the sixth night, he may give it to a player. That player repels one wolf attack and kills a random wolf in the process.",
   "Manipulator": "Wins if he reaches the final three without ever being nominated. The moment he is nominated, he dies immediately.",
-  "Doppelspion": "Wakes up together with the werewolves. Wins alone when all werewolves are dead.",
+  "Doppelspion": "Wakes up together with the werewolves. Wins alone when all werewolves are dead. The Revenge Wolf's attack has no effect on him.",
   "Grabräuber": "May once steal the ability of a dead player. Wins alone.",
   "Parasite": "Wakes each night and may attach himself to a living player. He only dies when his host dies. Wins if he reaches the final three.",
   "Todesprediger": "Predicts the exact night or day of his own death. If he is correct, he wins alone."
@@ -387,6 +387,37 @@ window.anyLivingSeatHasAnyRoleTags = anyLivingSeatHasAnyRoleTags;
     hideTip();
   };
 })();
+
+const WOLF_ROLES_SET = new Set([
+  "Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf",
+  "Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe",
+  "Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf",
+  "Fenrir","Blutwolf","Albtraumwolf","Cerberus"
+]);
+
+// Authoritative solo list — abilities-helpers.js references window.SOLO_WIN_ROLES instead of duplicating
+const SOLO_ROLES_SET = window.SOLO_WIN_ROLES = new Set([
+  "Selbstmörder","Rattenfänger","Pestbringerin","Prophet des Untergangs",
+  "Feuerteufel","Voodoo-Priester","Hades","Kartenschlucker","Nekromant",
+  "Manipulator","Doppelspion","Grabräuber","Parasit","Todesprediger"
+]);
+
+function getRoleFaction(name) {
+  if (WOLF_ROLES_SET.has(name)) return "wolf";
+  if (SOLO_ROLES_SET.has(name)) return "solo";
+  return "dorf";
+}
+
+const _RP_IMG_EXCEPTIONS = {
+  "Loki": "Loki_DE.png",
+  "Dorfchronistin": "Dorfchronistin_DE.png",
+  "Wahnsinniger Kutscher": "Wahnsinniger Kutscher.png",
+  "Voodoo-Priester": "Voodoo_Priester.png"
+};
+function roleToImagePath(name) {
+  const file = _RP_IMG_EXCEPTIONS[name] || (name.replace(/-/g, "_").replace(/ /g, "_") + ".png");
+  return "assets/cards/de/" + file;
+}
 
 window.showRoleInfoPopup = function (role, desc) {
   if (window._roleInfoPopupDismiss) {

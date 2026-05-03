@@ -26,3 +26,5 @@ npm-debug.log*
 
 # Große Audio-Datei (83 MB – zu groß für GitHub ohne LFS)
 assets/sounds/Nachtmusik.mp3
+
+.vercel

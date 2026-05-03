@@ -113,8 +113,8 @@ window.GRIMM_ABILITIES_ROLES = {
     if (dead.length <= alive.length) return;
 
     const kingSeat = seats.find(s => s.role === "König");
-    const goodPlayers = alive.filter(s => 
-      !isWolf(s) &&
+    const goodPlayers = alive.filter(s =>
+      (typeof getFaction==="function" ? getFaction(s.role)==="dorf" : !isWolf(s)) &&
       s !== kingSeat
     );
 
@@ -156,10 +156,10 @@ window.GRIMM_ABILITIES_ROLES = {
 
   Schutzengel:({pick,save,draw})=>pick(
     ((window.getRoleName&&window.getRoleName("Schutzengel"))||"Schutzengel")+"  — wähle 1 (nicht dich selbst)",
-    s=>{s.flags.protected=true;save();draw()},
+    s=>{s.flags.protectedCount=(s.flags.protectedCount||0)+1;s.flags.protected=true;save();draw()},
     x=>!x.flags.dead && (x.role||"")!=="Schutzengel"
   ),
-  Werwolf:({seats,pick,save,draw})=>pick(((localStorage.getItem("grimmhain_lang")||"de")==="en" ? "Werewolf  — Target (🎯/🛡)" : "Werwolf  — Ziel (🎯/🛡)"),s=>{const pierce=!!(state.once&&state.once.SeuchenwolfNextAttackPierces);if(!pierce&&(s.flags.protected||s.role==="Dorfwache")){s.flags.protected=false}else{seats.forEach(x=>x.flags.targeted=false);s.flags.targeted=true}save();draw()},x=>!x.flags.dead),
+  Werwolf:({seats,pick,save,draw})=>pick(((localStorage.getItem("grimmhain_lang")||"de")==="en" ? "Werewolf  — Target (🎯/🛡)" : "Werwolf  — Ziel (🎯/🛡)"),s=>{const pierce=!!(state.once&&state.once.SeuchenwolfNextAttackPierces);if(!pierce&&(s.flags.protected||s.role==="Dorfwache")){s.flags.protectedCount=Math.max(0,(s.flags.protectedCount||1)-1);s.flags.protected=s.flags.protectedCount>0}else{seats.forEach(x=>x.flags.targeted=false);s.flags.targeted=true}save();draw()},x=>!x.flags.dead),
   "Nekromant":({center,save,draw,startMulti})=>{
     const deadAll=(state.seats||[]).filter(s=>s.flags&&s.flags.dead);
     if(deadAll.length<3){
@@ -346,7 +346,8 @@ window.GRIMM_ABILITIES_ROLES = {
           try{
             state.seats.forEach(x=>{if(x.flags)x.flags.targeted=false});
             if(s.flags.protected || s.role==="Dorfwache"){
-              s.flags.protected=false;
+              s.flags.protectedCount=Math.max(0,(s.flags.protectedCount||1)-1);
+              s.flags.protected=s.flags.protectedCount>0;
             } else {
               s.flags.targeted=true;
             }
@@ -491,7 +492,7 @@ window.GRIMM_ABILITIES_ROLES = {
     if(!state.once.SchutzgeistAwaitingPick){center((window.t&&window.t("schutzgeistNotActive"))||"Schutzgeist: Noch nicht aktiv.",false);return}
     pick(((window.getRoleName&&window.getRoleName("Schutzgeist"))||"Schutzgeist")+"  — Schutzschild vergeben",s=>{
       s.meta=s.meta||{};
-      s.flags.protected=true;
+      s.flags.protectedCount=(s.flags.protectedCount||0)+1;s.flags.protected=true;
       if(isWolf(s)){
         try{center((window.t&&window.t("schutzgeistWolf"))||"ÖFFENTLICH: Der Schutzgeist hat einen Werwolf gewählt!",true)}catch(e){}
       }
@@ -721,7 +722,7 @@ window.GRIMM_ABILITIES_ROLES = {
   },
   "Verdammniswächter":({seats,save,draw,center})=>{
     const v=seats.find(x=>x.flags.targeted&&!x.flags.dead);if(!v){center((window.t&&window.t("noTargetSet"))||"Kein Opfer gesetzt.",false);return}
-    let pool=seats.filter(s=>!s.flags.dead&&s!==v);if(!pool.length){center((window.t&&window.t("nobodyElseLives"))||"Niemand sonst lebt.",false);return}
+    let pool=seats.filter(s=>!s.flags.dead&&s!==v&&!isWolf(s));if(!pool.length){center((window.t&&window.t("nobodyElseLives"))||"Niemand sonst lebt.",false);return}
     const rnd=pool[Math.floor(Math.random()*pool.length)]
     const ov=document.getElementById("overlay");document.getElementById("mt").textContent="Verdammniswächter";document.getElementById("mb").className="big";document.getElementById("mb").textContent=(window.tf&&window.tf("doomGuardianChoice",{vName:v.name||"#"+v.id,rndName:rnd.name||"#"+rnd.id}))||("Wer stirbt? Wähle 1 von 2: "+(v.name||"#"+v.id)+" (Nachtopfer) oder "+(rnd.name||"#"+rnd.id));document.getElementById("mbtns").innerHTML=""
     const b1=document.createElement("button"),b2=document.createElement("button");[b1,b2].forEach(b=>b.className="btn")

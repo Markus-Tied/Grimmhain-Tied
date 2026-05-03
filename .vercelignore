@@ -1,0 +1,7 @@
+assets/sounds/Nachtmusik.mp3
+node_modules/
+*.log
+package.json
+package-lock.json
+tests/
+tools/

@@ -680,16 +680,8 @@ html, body {
   var selectedRoleCounts = {};
 
   /* ── Rollen-Sets ── */
-  var WOLF_SET = new Set([
-    "Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf",
-    "Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe",
-    "Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf",
-    "Fenrir","Blutwolf","Albtraumwolf","Cerberus"
-  ]);
-  var SOLO_SET = new Set([
-    "Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs",
-    "Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer"
-  ]);
+  var WOLF_SET = (typeof WOLF_ROLES_SET !== 'undefined') ? WOLF_ROLES_SET : new Set();
+  var SOLO_SET = (typeof window.SOLO_WIN_ROLES !== 'undefined') ? window.SOLO_WIN_ROLES : new Set();
 
   /* ── Elemente ── */
   var step1 = document.getElementById('step1');
@@ -1038,6 +1030,15 @@ html, body {
       var cnt = selectedRoleCounts[role] || 0;
       for (var i = 0; i < cnt; i++) roles.push(role);
     });
+
+    var isDE = (localStorage.getItem(LS_LANG) || 'de') === 'de';
+    if (roles.includes('Schwarze Witwe') && !roles.includes('Loki')) {
+      rolesCounter.textContent = isDE
+        ? '⚠️ Schwarze Witwe benötigt Loki im Pool!'
+        : '⚠️ Black Widow requires Loki in the pool!';
+      rolesCounter.className = 'step-counter warn';
+      return;
+    }
 
     if (random) {
       for (var i = roles.length - 1; i > 0; i--) {

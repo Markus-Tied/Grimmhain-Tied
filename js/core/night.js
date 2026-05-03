@@ -137,13 +137,14 @@ function onNightStart(){
   if(typeof state.nightCount!=="number") state.nightCount=1;
   const fenrirAlive=(state.seats||[]).some(s=>s.role==="Fenrir"&&!s.flags.dead); if(fenrirAlive) state.fenrirStage=Math.min(3,(state.fenrirStage||0)+1);
   state.once = state.once || {};
+  state.once._nightDeadSnapshot = (state.seats||[]).filter(s=>s.flags.dead).map(s=>s.id);
   state.once.SchattenhundBlocked=false;
   state.once.WhiteWolfCooldown = Math.max(0,(state.once.WhiteWolfCooldown||0)-1);
   if(state.once.TotenratDeathImmunityPending){
     state.once.TotenratDeathImmunityPending=false;
     try{ if(typeof center==="function") center((window.t&&window.t("totenratShieldExpiredNight"))||"Nekromant: Der Schild verfällt mit Beginn der nächsten Nacht.", false); }catch(e){}
   }
-  state.seats.forEach(s=>{s.flags.protected=(s.role==="Der Weise")?s.flags.protected:false;s.flags.targeted=false;s.flags.nominated=false;s.flags.burned=false;s.meta.blockedTonight=false;s.meta.killedTonight=false})
+  state.seats.forEach(s=>{const keepP=(s.role==="Der Weise")&&s.flags.protected;s.flags.protected=keepP;s.flags.protectedCount=keepP?(s.flags.protectedCount||1):0;s.flags.targeted=false;s.flags.nominated=false;s.flags.burned=false;s.meta.blockedTonight=false;s.meta.killedTonight=false})
   state.seats.forEach(s=>{ if(s.meta) delete s.meta.packfatherPierce; })
   state.once.BlockedRolesTonight=[]
   state.seats.forEach(s=>{if(s.role==="Cerberus"&&!s.flags.dead){s.meta.cerbHeads=Math.min(3,(s.meta.cerbHeads||0)+1)}})
@@ -176,6 +177,7 @@ function onNightStart(){
 }
 
 function onDayStart(){
+  state.once = state.once || {};
   try {
     if (typeof nightAudio !== "undefined" && nightAudio.src) {
       state.files = state.files || {};
@@ -317,7 +319,7 @@ function resolveDayKills(nightTargets){
       });
     }
     if(typeof applyRitterRetaliationFromNight==="function") applyRitterRetaliationFromNight();
-    const afterCurses = ()=>{ postDeathHooks(); state.dark=false; state.nightCount=(state.nightCount||1)+1; save(); draw(); rebuildOrder(); if(typeof showBlutwolfInfo==="function") showBlutwolfInfo() };
+    const afterCurses = ()=>{ state.once._inNightResolution=true; postDeathHooks(); delete state.once._inNightResolution; state.dark=false; const _thisNight=state.nightCount||1; state.nightCount=_thisNight+1; save(); draw(); rebuildOrder(); if(typeof showBlutwolfInfo==="function") showBlutwolfInfo(); const _snap=state.once._nightDeadSnapshot||[]; const _newlyDead=(state.seats||[]).filter(s=>s.flags.dead&&!_snap.includes(s.id)); delete state.once._nightDeadSnapshot; if(typeof showNightDeathSummary==="function") showNightDeathSummary(_newlyDead,_thisNight); };
     if(typeof processDemonCurses==="function") processDemonCurses(killedTonight, afterCurses); else afterCurses();
   };
   function processOne(idx){
@@ -467,7 +469,7 @@ function resetNightState(){
 
 function resetMarksOnly(){
   state.seats.forEach(s=>{
-    s.flags.protected=false
+    s.flags.protected=false;s.flags.protectedCount=0
     s.flags.targeted=false
     s.flags.inlove=false
     s.flags.rival=false

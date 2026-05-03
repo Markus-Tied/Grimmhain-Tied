@@ -128,16 +128,8 @@ function draw(){
   const startA=-Math.PI/2
   const cen=svg("ellipse",{cx:g.cx,cy:g.cy,rx:Math.max(40,g.seatR*1.2),ry:Math.max(40,g.seatR*1.2),fill:"#141731","fill-opacity":".18",stroke:"#5f67a8","stroke-opacity":".18"})
   stage.appendChild(cen)
-  const WOLF_ROLES = new Set([
-    "Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Spiegelwolf","Dämonischer Wolf",
-    "Trugbilderwolf","Schattenhund","Besessener Wolf","Fenrir",
-    "Blutwolf","Albtraumwolf","Cerberus"
-  ]);
-  const SOLO_ROLES = new Set([
-    "Rattenfänger","Pestbringerin","Hades","Selbstmörder",
-    "Prophet des Untergangs","Feuerteufel","Voodoo-Priester",
-    "Kartenschlucker","Totenrat-Führer"
-  ]);
+  const WOLF_ROLES = (typeof WOLF_ROLES_SET !== "undefined") ? WOLF_ROLES_SET : new Set(["Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf","Fenrir","Blutwolf","Albtraumwolf","Cerberus"]);
+  const SOLO_ROLES = (typeof SOLO_ROLES_SET !== "undefined") ? SOLO_ROLES_SET : new Set(["Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer"]);
   state.seats.forEach((s,i)=>{
     const ang=startA+i*(2*Math.PI/n)
     const x=g.cx+Math.cos(ang)*g.rx, y=g.cy+Math.sin(ang)*g.ry
@@ -185,38 +177,59 @@ function draw(){
     try{
       if(state && state.once && state.once.totenkarten && s.flags.dead){
         const data=state.once.totenkarten[s.id];
-        if(data && !data.gespielt){
+        if(data){
           const card=ALLE_KARTEN.find(k=>k.id===data.karteId);
           const farbe=getKategorieColor(card?card.kategorie:"");
+          const gespielt=!!data.gespielt;
 
-          const cardBtn=svg("g",{"class":"totenkarte-btn"});
-          cardBtn.style.cursor="pointer";
+          const dcx=g.cx-x, dcy=g.cy-y, dcDist=Math.sqrt(dcx*dcx+dcy*dcy)||1;
+          const nx=dcx/dcDist, ny=dcy/dcDist;
+          const cardDist=g.seatR*2.5;
 
+          const cardBtn=svg("g",{
+            "class":"totenkarte-btn",
+            transform:`translate(${nx*cardDist},${ny*cardDist})`,
+            opacity: gespielt ? "0.35" : "1"
+          });
+          if(!gespielt) cardBtn.style.cursor="pointer";
+
+          // Hintergrund-Fläche (komplett solide)
           const btnBg=svg("rect",{
-            x:-g.seatR*0.5, y:-g.seatR*1.58,
-            width:g.seatR*1.0, height:g.seatR*0.40,
-            rx:g.seatR*0.07,
-            fill:"#0d1228",
-            stroke:farbe||"#ffffff",
-            "stroke-width":"1.5"
+            x:-g.seatR*0.90, y:-g.seatR*0.24,
+            width:g.seatR*1.80, height:g.seatR*0.48,
+            rx:g.seatR*0.08,
+            fill:"#0d0820"
+          });
+
+          // Farbiger Rahmen
+          const btnBorder=svg("rect",{
+            x:-g.seatR*0.90, y:-g.seatR*0.24,
+            width:g.seatR*1.80, height:g.seatR*0.48,
+            rx:g.seatR*0.08,
+            fill:"none",
+            stroke:farbe||"#d4af37",
+            "stroke-width":"3"
           });
 
           const btnTxt=svg("text",{
-            x:0, y:-g.seatR*1.30,
+            x:0, y:g.seatR*0.09,
             "text-anchor":"middle",
-            fill:farbe||"#ffffff",
-            "font-size":Math.max(9,g.seatR*0.16),
+            fill:farbe||"#d4af37",
+            "font-size":Math.max(11,g.seatR*0.19),
             "font-weight":"bold"
           });
           btnTxt.textContent = "🎴 " + (window.t ? window.t("deathCard") : "Totenkarte");
 
           cardBtn.appendChild(btnBg);
+          cardBtn.appendChild(btnBorder);
           cardBtn.appendChild(btnTxt);
 
-          cardBtn.onclick=function(ev){
-            ev.stopPropagation();
-            if(typeof showTodesscreen==="function") showTodesscreen(s);
-          };
+          if(!gespielt){
+            cardBtn.onclick=function(ev){
+              ev.stopPropagation();
+              if(typeof showTodesscreen==="function") showTodesscreen(s);
+            };
+          }
 
           group.appendChild(cardBtn);
         }
@@ -335,3 +348,87 @@ function attachAll(){
   if (window.hideRoleTooltip) window.hideRoleTooltip();
   document.querySelectorAll('#order .slot').forEach(function(s){ attachTo(s); });
 }
+
+const DEATH_CAUSE_LABELS={
+  "NIGHT_KILL":"🐺 Werwolf","PACKFATHER_KILL":"🐺 Rudelvater",
+  "LYNCH":"⚖️ Lynch","BUSDRIVER_LYNCH":"🃏 Wahnsinniger Kutscher",
+  "HANGMAN_EXECUTION":"🪓 Henker","BLACK_WIDOW":"🕷️ Schwarze Witwe",
+  "GIFTWOLF_DELAY":"☣️ Giftwolf","BURN_SPREAD":"🔥 Feuerteufel",
+  "BURN_LYNCH_SPREAD":"🔥 Feuerteufel","MARTYR_SACRIFICE":"✝️ Märtyrerin",
+  "VOODOO_PUPPET":"🧸 Voodoo-Priester","SCHMIED_WEAPON":"⚔️ Dorfschmied",
+  "HADES_KILL":"💀 Hades","WITCH_POISON":"🧙 Waldhexe",
+  "MANIPULATOR_NOMINATED":"🎭 Manipulator","RITTER_RETALIATION":"⚔️ Ritter",
+  "LOVER_HEARTBREAK":"💔 Loki","RED_RIDING_HOOD_LINK":"💔 Rotkäppchen",
+  "BESESSENER_WOLF":"🐺 Besessener Wolf","PARASITE_HOST":"🪱 Parasit",
+  "WARRIOR_WRONG":"⚔️ Kriegerin des Lichts","AMALIA_SACRIFICE":"🙏 Amalia",
+  "BLOODPRIEST_SACRIFICE":"🩸 Blutpriester","VERDAMMNISWAECHTER":"⚖️ Verdammniswächter",
+  "PROPHET_KILL":"🔮 Prophet des Untergangs","KARTENSCHLUCKER_KILL":"🃏 Kartenschlucker",
+  "SHADOW_SWAP":"🌑 Schattenwanderer","SENSENTRAEGER_KILL":"⚰️ Sensenträger",
+};
+window.DEATH_CAUSE_LABELS=DEATH_CAUSE_LABELS;
+
+function _deathLabel(s){
+  var c=(s&&s.meta&&s.meta.lastKillCause)||"";
+  return DEATH_CAUSE_LABELS[c]||("💀 "+(c||"Unbekannt"));
+}
+
+function _renderDeathGroups(mb, seats){
+  mb.style.cssText+="overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(18px,3vh,40px);padding:24px 32px;";
+  (seats||[]).forEach(function(s){
+    var block=document.createElement("div");
+    block.style.cssText="display:flex;flex-direction:column;align-items:center;gap:0.15em;line-height:1.1;";
+    var cause=document.createElement("div");
+    cause.style.cssText="font-size:clamp(28px,3.5vw,52px);font-weight:600;color:#8899cc;letter-spacing:0.06em;";
+    cause.textContent=_deathLabel(s);
+    var name=document.createElement("div");
+    name.style.cssText="font-size:clamp(64px,8vw,140px);font-weight:700;color:#ffffff;letter-spacing:0.03em;";
+    name.textContent=s.name||("Sitz "+s.id);
+    block.appendChild(cause);
+    block.appendChild(name);
+    mb.appendChild(block);
+  });
+}
+
+function _openDeathOverlay(title, seats, noDeadText, onClose){
+  var ov=document.getElementById("overlay");
+  var mt=document.getElementById("mt");
+  var mb=document.getElementById("mb");
+  var mbtns=document.getElementById("mbtns");
+  if(!ov||!mt||!mb||!mbtns) return;
+  mt.textContent=title;
+  mb.className="big";
+  mb.style.fontSize=""; mb.style.maxHeight="";
+  while(mb.firstChild) mb.removeChild(mb.firstChild);
+  while(mbtns.firstChild) mbtns.removeChild(mbtns.firstChild);
+  if(!(seats&&seats.length)){
+    var row=document.createElement("div");
+    row.style.cssText="padding:10px 0;color:#888;font-style:italic;font-size:20px;";
+    row.textContent=noDeadText||(window.t&&window.t("noDead"))||"Niemand gestorben.";
+    mb.appendChild(row);
+  } else {
+    _renderDeathGroups(mb, seats);
+  }
+  var ok=document.createElement("button");
+  ok.className="btn good"; ok.textContent="OK";
+  ok.onclick=function(){
+    ov.style.display="none";
+    if(typeof onClose==="function") try{ onClose(); }catch(e){}
+  };
+  mbtns.appendChild(ok);
+  ov.style.display="flex";
+}
+
+function showNightDeathSummary(newlyDead, nightNum){
+  _openDeathOverlay(
+    "☀️ Nacht "+nightNum+" — Morgengrauen",
+    newlyDead,
+    (window.t&&window.t("noDead"))||"Niemand starb diese Nacht.",
+    function(){ try{ if(typeof window.__processHunterQueue==="function") window.__processHunterQueue(); }catch(e){} }
+  );
+}
+
+function showDeathPopup(newlyDead){
+  if(!(newlyDead&&newlyDead.length)) return;
+  _openDeathOverlay("💀 Tod", newlyDead, "");
+}
+window.showDeathPopup=showDeathPopup;

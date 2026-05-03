@@ -69,7 +69,11 @@ document.getElementById("searchBtn")&&(document.getElementById("searchBtn").oncl
 })
 window.addEventListener("resize", ()=>{ const ov=document.getElementById("overlay"); if(ov&&ov.style.display==="flex") fitModalText() })
 function onOrderClick(role){ snapshot(); window.__activeRole = role; markStarUsed(role);
-  const actors=(state.seats||[]).filter(s=>!s.flags.dead && s.role===role);
+  let actors=(state.seats||[]).filter(s=>!s.flags.dead && s.role===role);
+  if(role==="Werwolf" && actors.length===0){
+    const _allWolf=["Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Schattenhund","Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Besessener Wolf","Fenrir","Blutwolf","Albtraumwolf","Cerberus"];
+    actors=(state.seats||[]).filter(s=>!s.flags.dead && _allWolf.includes(s.role));
+  }
   const allowNoLivingActor=!!(state.ui&&state.ui.ghostCasting)||(role==="Schutzgeist"&&state.once&&state.once.SchutzgeistAwaitingPick&&(state.seats||[]).some(s=>s.role==="Schutzgeist"&&s.flags.dead));
   if(!actors.length&&!allowNoLivingActor){ center((window.t&&window.t("noAbility"))||"Keine Fähigkeit",false); return; }
   try{
@@ -92,9 +96,19 @@ function onOrderClick(role){ snapshot(); window.__activeRole = role; markStarUse
   const ab=abilities[role]||(()=>center((window.t&&window.t("noAbility"))||"Keine Fähigkeit",false))
   const actorSeat=actors.length===1?actors[0]:null;
   const hasAppleBuff=actorSeat&&actorSeat.meta&&actorSeat.meta.appleBuff;
+  const APPLE_RESET_FLAGS={
+    "König":["KoenigUsed"],
+    "Dr. Victor Frankenstein":["FrankensteinUsed"],
+    "Dorfschmied":["SchmiedWeaponGiven"],
+    "Chronist":["ChroniclerShown"],
+    "Pestbringerin":["PestUsedTonight"],
+    "Prophet des Untergangs":["ProphetKillUsedTonight"],
+  };
+  function appleResetForRole(r){(APPLE_RESET_FLAGS[r]||[]).forEach(f=>{if(state.once)delete state.once[f];});}
+  if(hasAppleBuff&&actorSeat) appleResetForRole(actorSeat.role);
   const runAb=()=>{
     const wrapPick=(p,onS,allow)=>{
-      startPick(p,s=>{onS(s);if(actorSeat&&actorSeat.meta&&actorSeat.meta.appleBuff){delete actorSeat.meta.appleBuff;save();runAb()}},allow)
+      startPick(p,s=>{onS(s);if(actorSeat&&actorSeat.meta&&actorSeat.meta.appleBuff){delete actorSeat.meta.appleBuff;appleResetForRole(actorSeat.role);save();runAb()}},allow)
     };
     const wrapMulti=(p,max,allow,done)=>{
       startMulti(p,max,allow,chosen=>{done(chosen);if(actorSeat&&actorSeat.meta&&actorSeat.meta.appleBuff){delete actorSeat.meta.appleBuff;save();runAb()}})

@@ -75,6 +75,34 @@ const TOTENKARTEN = {
       wolf: "Die toten Werwölfe stimmen heimlich ab — ein Dorfbewohner ihrer Wahl stirbt noch in dieser Nacht.",
       dorf: "Die toten Dorfbewohner stimmen heimlich ab — ein Werwolf ihrer Wahl stirbt noch in dieser Nacht."
     },
+    {
+      id: "segen_11",
+      kategorie: "SEGEN",
+      name: "Spiegelschutz",
+      wolf: "Sollte am nächsten Tag ein Wolf gelyncht werden stirbt stattdessen derjenige der die Nominierung ausgesprochen hat.",
+      dorf: "Sollten die Werwölfe in der Folgenacht einen Dorfbewohner erwischen stirbt stattdessen einer von ihnen."
+    },
+    {
+      id: "segen_12",
+      kategorie: "SEGEN",
+      name: "Geisterhand",
+      wolf: "Ein von dir ausgewählter Spieler erhält zusätzlich für die nächste Nacht die Fähigkeit des zuletzt verstorbenen Werwolfs.",
+      dorf: "Ein von dir ausgewählter Spieler erhält zusätzlich für die nächste Nacht die Fähigkeit des zuletzt verstorbenen Dorfbewohners."
+    },
+    {
+      id: "segen_13",
+      kategorie: "SEGEN",
+      name: "Schattenvorteil",
+      wolf: "In der Folgenacht missglückt die erste Fähigkeit die einen Wolf trifft.",
+      dorf: "Die Werwölfe werden in der Folgenacht als erstes geweckt und ihr Opfer wird laut nach der Einigung angesagt."
+    },
+    {
+      id: "segen_14",
+      kategorie: "SEGEN",
+      name: "Eiserner Wille",
+      wolf: "Erhalte Einsicht ins Spiel und wähle einen Spieler aus der seine Fähigkeit entweder erneut oder zweimal einsetzen darf in der Folgenacht.",
+      dorf: "Erhalte Einsicht ins Spiel und wähle einen Spieler aus der seine Fähigkeit entweder erneut oder zweimal einsetzen darf in der Folgenacht."
+    },
   ],
 
   // ══════════════════════════════════════
@@ -126,8 +154,8 @@ const TOTENKARTEN = {
     {
       id: "schicksal_08",
       kategorie: "SCHICKSAL",
-      name: "Rollentausch",
-      neutral: "Zwei ausgewählte lebende Spieler erhalten eine neue Rolle — der Spielleiter informiert beide still. Fraktionen wechseln mit."
+      name: "Neu Anfang",
+      neutral: "Zwei ausgewählte lebende Spieler erhalten eine neue Rolle innerhalb ihrer Fraktion — der Spielleiter informiert beide still."
     },
     {
       id: "schicksal_09",
@@ -140,6 +168,30 @@ const TOTENKARTEN = {
       kategorie: "SCHICKSAL",
       name: "Anarchie",
       neutral: "In der kommenden Nacht wird eine zufällige bereits verbrauchte Einmalfähigkeit eines lebenden Spielers deiner Fraktion wieder verfügbar."
+    },
+    {
+      id: "schicksal_11",
+      kategorie: "SCHICKSAL",
+      name: "Kettenreaktion",
+      neutral: "Stirbt jemand durch Lynch, stirbt auch der Spieler mit den zweitmeisten Stimmen sofort — ohne weitere Abstimmung."
+    },
+    {
+      id: "schicksal_12",
+      kategorie: "SCHICKSAL",
+      name: "Totengericht",
+      neutral: "Der nächste Tag wird von den Toten geleitet — nur tote Spieler dürfen nominieren und abstimmen. Lebende Spieler hören schweigend zu."
+    },
+    {
+      id: "schicksal_13",
+      kategorie: "SCHICKSAL",
+      name: "Stille Wahl",
+      neutral: "Heute findet keine Diskussion statt — lediglich Nominierung und sofortige Abstimmung. Kein Spieler darf zuvor das Wort ergreifen."
+    },
+    {
+      id: "schicksal_14",
+      kategorie: "SCHICKSAL",
+      name: "Richterstuhl",
+      neutral: "Das Dorf wählt sofort einen temporären Richter — exakt wie die Bürgermeisterwahl. Dieser Richter allein verhängt das Urteil des Tages."
     },
   ],
 
@@ -216,6 +268,27 @@ const TOTENKARTEN = {
       name: "Schlechtes Omen",
       wolf: "Sollten die Wölfe heute Nacht keine starke Rolle erwischen entscheidet der Spielleiter ob einer von ihnen stirbt.",
       dorf: "Sollte heute kein Werwolf gelyncht werden stirbt ein weiterer zufälliger Dorfbewohner noch am selben Tag."
+    },
+    {
+      id: "fluch_11",
+      kategorie: "FLUCH",
+      name: "Rabe des Unheils",
+      wolf: "Du musst einen Wolf deiner Wahl dem Dorf öffentlich enthüllen.",
+      dorf: "Du musst einen Dorfbewohner deiner Wahl dem Dorf öffentlich enthüllen."
+    },
+    {
+      id: "fluch_12",
+      kategorie: "FLUCH",
+      name: "Doppeltes Leid",
+      wolf: "Stirbt als nächstes ein Wolf stirbt automatisch ein weiterer zufälliger Wolf mit ihm.",
+      dorf: "Stirbt als nächstes ein Dorfbewohner stirbt automatisch ein weiterer zufälliger Dorfbewohner mit ihm."
+    },
+    {
+      id: "fluch_13",
+      kategorie: "FLUCH",
+      name: "Lähmungswelle",
+      wolf: "Alle Wölfe können beim nächsten Lynch nicht abstimmen.",
+      dorf: "Alle Dorfbewohner mit einer aktiven Fähigkeit können beim nächsten Lynch nicht abstimmen."
     },
   ],
 
@@ -295,6 +368,20 @@ const TOTENKARTEN = {
       wolf: "Die stärkste aktive Schutzfähigkeit eines Dorfbewohners wird für eine Nacht deaktiviert — der Spielleiter wählt welche.",
       dorf: "Die stärkste aktive Fähigkeit eines Werwolfs wird für eine Nacht deaktiviert — der Spielleiter wählt welche."
     },
+    {
+      id: "wende_11",
+      kategorie: "WENDE",
+      name: "Schicksalswende",
+      wolf: "König Lykaon erwacht in dir — verleihe einem Wolf deiner Wahl die Fähigkeit einen Spieler in einen Trugbildwolf zu verwandeln.",
+      dorf: "Sollte der nächste Lynch einen Dorfbewohner treffen wird das Urteil auf einen zufälligen Wolf umgeleitet."
+    },
+    {
+      id: "wende_12",
+      kategorie: "WENDE",
+      name: "Geheimrat",
+      wolf: "Die Werwölfe werden in dieser Nacht als letztes aufgerufen — du darfst für diese Nacht die Augen öffnen und ihnen Hinweise geben.",
+      dorf: "Du darfst dem Spielleiter eine Frage stellen die er wahrheitsgemäß beantworten muss. (Nur in Spielen mit Wiederbelebungs-Szenarien)"
+    },
   ],
 
   // ══════════════════════════════════════
@@ -311,7 +398,7 @@ const TOTENKARTEN = {
       id: "loki_02",
       kategorie: "LOKI",
       name: "Stille Abstimmung",
-      neutral: "Der Tag wird auf 30 Sekunden verkürzt. Gibt es nicht mindestens 3 Nominierungen sterben 1-5 zufällige Spieler. Wird die Nominierung und Lynchung nicht innerhalb der 30 Sekunden abgeschlossen sterben alle 3 Nominierten."
+      neutral: "Der Tag wird auf 60 Sekunden verkürzt. Gibt es nicht mindestens 3 Nominierungen sterben 1-5 zufällige Spieler. Wird die Nominierung und Lynchung nicht innerhalb der 60 Sekunden abgeschlossen sterben alle 3 Nominierten."
     },
     {
       id: "loki_03",
@@ -335,7 +422,7 @@ const TOTENKARTEN = {
       id: "loki_06",
       kategorie: "LOKI",
       name: "Rollenroulette",
-      neutral: "Der Spielleiter tauscht heimlich die Rollen zweier zufälliger lebender Spieler — beide werden still informiert. Fraktionen wechseln mit."
+      neutral: "Der Spielleiter tauscht die Rollen zweier zufälliger lebender Spieler beide gehören der selben Fraktion an — beide werden still informiert."
     },
     {
       id: "loki_07",
@@ -362,16 +449,125 @@ const TOTENKARTEN = {
       neutral: "Es werden zwei Würfel gewürfelt, der erste belebt Entsprechend viele zufällige Spieler wieder, der zweite entscheidet für wieviele runden sie am leben bleiben.",
       deathCardRequirements: { requiresAnyLivingRoleTag: ["revive", "role-return", "death-trigger-transform"] }
     },
+    {
+      id: "loki_11",
+      kategorie: "LOKI",
+      name: "Stummfilm",
+      neutral: "Heute darf niemand sprechen — nur Handzeichen und Mimik erlaubt. Wer auch nur ein Wort spricht stirbt sofort."
+    },
+    {
+      id: "loki_12",
+      kategorie: "LOKI",
+      name: "Kosmisches Gleichgewicht",
+      neutral: "Stirbt heute ein Wolf stirbt auch ein Dorfbewohner. Stirbt ein Dorfbewohner stirbt auch ein Wolf. Der Spielleiter entscheidet die Opfer nach Rollenstärke."
+    },
+    {
+      id: "loki_13",
+      kategorie: "LOKI",
+      name: "Verhexte Lynch",
+      neutral: "Beim heutigen Lynch stirbt der Spieler mit den wenigsten Stimmen — nicht der mit den meisten."
+    },
+  ],
+
+  // ══════════════════════════════════════
+  // SOLO — Nur für Solo-Spieler beim Tod
+  // ══════════════════════════════════════
+  solo: [
+    {
+      id: "solo_01",
+      kategorie: "SOLO",
+      name: "Todesprojektion",
+      solo: "Schreibe auf einen Zettel einen Spieler und gebe sie dem Spielleiter, sollte dieser Spieler bei der nächsten Lynchung sterben nimmst du seine Rolle & Fraktion an und nimmst wieder am spielgeschehen teil."
+    },
+    {
+      id: "solo_02",
+      kategorie: "SOLO",
+      name: "Schwarze Prophezeiung",
+      solo: "Du tippt dem SL geheim welches Team das Spiel gewinnt. Liegt du richtig wirst du am Spielende als stiller Mitsieger anerkannt."
+    },
+    {
+      id: "solo_03",
+      kategorie: "SOLO",
+      name: "Racheschwur",
+      solo: "Der Spieler der dich zuletzt nominiert hat (oder dich nachts angegriffen hat) erhält dauerhaft +3 Startstimmen gegen sich bei jedem zukünftigen Lynch. Der Fluch endet erst wenn er stirbt."
+    },
+    {
+      id: "solo_04",
+      kategorie: "SOLO",
+      name: "Apokalyptischer Abgang",
+      solo: "Wähle 2 lebende Spieler. Sie sind ab sofort durch ein Todesband verbunden: Stirbt einer in den nächsten 4 Nächten stirbt der andere am selben Abend sofort nach."
+    },
+    {
+      id: "solo_05",
+      kategorie: "SOLO",
+      name: "Vermächtnis der Einsamkeit",
+      solo: "Wähle einen lebenden Spieler. Er erbt deine Fähigkeit und deine Siegbedingung zusätzlich, sollte dieser unter den Gewinnern sein gewinnst du mit."
+    },
+    {
+      id: "solo_06",
+      kategorie: "SOLO",
+      name: "Geisterstimme",
+      solo: "Du agierst ab sofort vom Totenreich aus — du darfst in den folgenden drei Tagen Nominieren und mit Abstimmen, dazu zählt deine Stimme Doppelt, sollte es dir gelingen dadurch jemanden zu Lynchen wirst du mit einer Neuen Solo-Rolle wiederbelebt."
+    },
+    {
+      id: "solo_07",
+      kategorie: "SOLO",
+      name: "Martyrium",
+      solo: "Wähle Dorf oder Wölfe. Diese Fraktion erhält sofort einen Bonus: Dorf = die nächste Nacht findet kein Wolf-Angriff statt. Wölfe = der nächste Lynch wird annulliert."
+    },
+    {
+      id: "solo_08",
+      kategorie: "SOLO",
+      name: "Stiller Zeuge",
+      solo: "Du hast das ganze Spiel beobachtet. Nenne dem SL heimlich den Spieler den du für den gefährlichsten hältst. Sollte dieser Gewinnen, gewinnst du mit ihm."
+    },
+    {
+      id: "solo_09",
+      kategorie: "SOLO",
+      name: "Chaosgeist",
+      solo: "Würfle laut einen Würfel. Die gewürfelte Zahl entspricht der Anzahl Spieler die heute durch Lynchung sterben müssen."
+    },
+    {
+      id: "solo_10",
+      kategorie: "SOLO",
+      name: "Einsames Erbe",
+      solo: "Du hinterlässt zwei Zettel beim SL. Auf einem steht der Name des Spielers der gewinnen wird. Auf dem anderen steht der erste Spieler der nach dir stirbt. Beide Zettel werden zu ihrem jeweiligen Zeitpunkt geöffnet. Lagen beide richtig — du gewinnst posthum."
+    },
+    {
+      id: "solo_11",
+      kategorie: "SOLO",
+      name: "Richter aus dem Totenreich",
+      solo: "Nach jeder Abstimmung darfst du erneut einmal Nominieren — nur wenn mindestens 50% der Spieler dafür sind wird diese Person zusätzlich gelyncht."
+    },
+    {
+      id: "solo_12",
+      kategorie: "SOLO",
+      name: "Familienbande aus dem Totenreich",
+      solo: "Wähle einen Spieler — dieser erhält dauerhaft +3 auf seiner Stimme, er gewinnt automatisch wenn er unter den letzten 2 Lebenden ist und du gewinnst mit ihm."
+    },
+    {
+      id: "solo_13",
+      kategorie: "SOLO",
+      name: "Das Totenreich Regiert",
+      solo: "Die nächsten 2 Tagphasen werden von den Toten regiert — nur diese dürfen Reden, Nominieren und Lynchen."
+    },
+    {
+      id: "solo_14",
+      kategorie: "SOLO",
+      name: "Verrat oder Verbrüderung",
+      solo: "Du darfst einen deiner lebenden Nachbarn beschuldigen böse zu sein — sollte der andere Nachbar zustimmen stirbt der besagte Bösewicht."
+    },
   ],
 };
 
-// Alle 50 Karten als flaches Array
+// Alle 80 Karten als flaches Array
 const ALLE_KARTEN = [
   ...TOTENKARTEN.segen,
   ...TOTENKARTEN.schicksal,
   ...TOTENKARTEN.fluch,
   ...TOTENKARTEN.wende,
   ...TOTENKARTEN.loki,
+  ...TOTENKARTEN.solo,
 ];
 
 const GRIMM_DEATHCARD_LEGACY_REVIVE_TAGS = ["revive", "role-return", "death-trigger-transform"];
@@ -446,16 +642,46 @@ function zieheZufallsKarte(seat) {
     const wolves = alive.filter(s => isWolf(s)).length;
     const villagers = alive.length - wolves;
     const seatIsWolf = seat ? isWolf(seat) : false;
+    const seatIsSolo = seat && (
+      (typeof getFaction === "function" && getFaction(seat.role) === "solo") ||
+      (typeof SOLO_WIN_ROLES !== "undefined" && SOLO_WIN_ROLES.has(seat.role))
+    );
+
+    // Solo-Spieler ziehen fast ausschließlich SOLO-Karten
+    if (seatIsSolo) {
+      const weights = { WENDE: 0, SEGEN: 0, FLUCH: 0, SCHICKSAL: 10, LOKI: 10, SOLO: 80 };
+      const verfuegbar = ALLE_KARTEN.filter(k => !vergeben.has(k.id));
+      const pool = verfuegbar.length > 0 ? verfuegbar : ALLE_KARTEN;
+      const byKat = {};
+      pool.forEach(k => { if (!byKat[k.kategorie]) byKat[k.kategorie] = []; byKat[k.kategorie].push(k); });
+      const weightedPool = [];
+      Object.entries(weights).forEach(([kat, w]) => {
+        if (w === 0) return;
+        const karten = byKat[kat] || [];
+        if (!karten.length) return;
+        const wpc = w / karten.length;
+        karten.forEach(k => weightedPool.push({ karte: k, weight: wpc }));
+      });
+      if (weightedPool.length) {
+        const totalW = weightedPool.reduce((sum, e) => sum + e.weight, 0);
+        let rand = Math.random() * totalW;
+        for (const entry of weightedPool) { rand -= entry.weight; if (rand <= 0) return entry.karte; }
+        return weightedPool[weightedPool.length - 1].karte;
+      }
+    }
 
     // Hinten liegend bestimmen mit 1:4 Verhältnis
     const factionBehind = seatIsWolf
       ? (wolves * 4 < villagers)
       : (villagers <= wolves);
 
-    // Gewichtungen festlegen
+    // WENDE nur wenn exakt 4:1 aktiv — verhindert Ziehen bei inaktiver Wende
+    const wendeWeight = (typeof isWendeAktiv === "function" && isWendeAktiv()) ? 40 : 0;
+
+    // Gewichtungen festlegen — SOLO immer 0 für Nicht-Solo-Spieler
     const weights = factionBehind
-      ? { WENDE: 40, SEGEN: 20, FLUCH: 10, SCHICKSAL: 20, LOKI: 10 }
-      : { WENDE: 0,  SEGEN: 30, FLUCH: 20, SCHICKSAL: 30, LOKI: 20 };
+      ? { WENDE: wendeWeight, SEGEN: 20, FLUCH: 10, SCHICKSAL: 20, LOKI: 10, SOLO: 0 }
+      : { WENDE: 0,           SEGEN: 30, FLUCH: 20, SCHICKSAL: 30, LOKI: 20, SOLO: 0 };
 
     // Gewichteten Pool aufbauen — jede Karte bekommt ein Gewicht basierend auf ihrer Kategorie
     // Bereits vergebene Karten rausfiltern
@@ -523,6 +749,7 @@ function zieheZufallsKarte(seat) {
 
 // Gibt den richtigen Kartentext basierend auf Fraktion zurück
 function getKartenText(karte,seat){
+  if(karte.solo) return karte.solo;
   if(karte.neutral) return karte.neutral;
   if(isWolf(seat)) return karte.wolf;
   return karte.dorf;
@@ -536,6 +763,7 @@ function getKategorieColor(kategorie){
     case "FLUCH": return "#ff5d73";
     case "WENDE": return "#ffb020";
     case "LOKI": return "#ff3355";
+    case "SOLO": return "#b06aff";
     default: return "#ffffff";
   }
 }
@@ -548,6 +776,7 @@ function getKategorieEmoji(kategorie){
     case "FLUCH": return "🔴";
     case "WENDE": return "🔄";
     case "LOKI": return "🃏";
+    case "SOLO": return "☠️";
     default: return "❓";
   }
 }

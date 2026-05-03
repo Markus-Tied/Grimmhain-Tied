@@ -1,7 +1,7 @@
 const LS_KEY="uw_custom_v16"
 
 function ensureSeatDefaults(s){
-  s.flags = Object.assign({dead:false,protected:false,targeted:false,inlove:false,rival:false,werewolf:false,vorbild:false,nominated:false,charmed:false,poisoned:false,burned:false,puppet:false,hmark:false,deadVoteStripped:false}, s.flags||{});
+  s.flags = Object.assign({dead:false,protected:false,protectedCount:0,targeted:false,inlove:false,rival:false,werewolf:false,vorbild:false,nominated:false,charmed:false,poisoned:false,burned:false,puppet:false,hmark:false,deadVoteStripped:false}, s.flags||{});
   s.meta = Object.assign({deathProcessed:false,hunterQueued:false,hunterShot:false,cerbHeads:0,killedTonight:false,cursedWolfAura:false,rivalId:null,loverId:null,unholy:false,blockedTonight:false}, s.meta||{});
   return s;
 }
@@ -15,7 +15,7 @@ function createState(n){
 
 function migrateLegacyRoleIds(st){
   if(!st) return;
-  var map={Amor:"Loki",Hexe:"Waldhexe",Jäger:"Sensenträger",Seherin:"Das Orakel","Flötenspieler":"Rattenfänger","Weißer Werwolf":"Rachsüchtiger Wolf","Der Alte":"Der Weise",Engel:"Schutzengel","Blinzelmädchen":"Dorfbewohner",Bärenführer:"Nachtwächter",Fuchs:"Spürhund",Urwolf:"König Lykaon"};
+  var map={Amor:"Loki",Hexe:"Waldhexe",Jäger:"Sensenträger",Seherin:"Das Orakel","Flötenspieler":"Rattenfänger","Weißer Werwolf":"Rachsüchtiger Wolf","Der Alte":"Der Weise",Engel:"Schutzengel","Blinzelmädchen":"Dorfbewohner",Bärenführer:"Nachtwächter",Fuchs:"Spürhund",Urwolf:"König Lykaon","Totenrat-Führer":"Nekromant"};
   (st.seats||[]).forEach(function(s){ if(s.role&&map[s.role]) s.role=map[s.role]; });
   var o=st.once;
   if(o){
@@ -57,6 +57,7 @@ function migrateState(st){
     TotenratFuehrerUsedDeflect:false,HadesLichter:0,HadesBarriere:false,HadesVoteBonus:false,HadesKilledTonight:false,HadesWon:false
   }, st.once||{});
   st.ui = Object.assign({judgeAsk:false,ghostCasting:false}, st.ui||{});
+  st.pending = Object.assign({judgeAsk:false}, st.pending||{});
   return st;
 }
 
