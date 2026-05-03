@@ -499,7 +499,8 @@ function doBearPing(){
 
   const L = nextAlive(i, -1), R = nextAlive(i, +1);
   const isWolfLocal = s => s && !s.flags.dead && (s.flags.werewolf || /wolf/i.test(s.role) || (s.meta && s.meta.cursedWolfAura === true));
-  if (isWolfLocal(L) || isWolfLocal(R)) queueSfxKey("sfxBear");
+  const isSolo = s => s && !s.flags.dead && window.SOLO_WIN_ROLES && window.SOLO_WIN_ROLES.has(s.role);
+  if (isWolfLocal(L) || isWolfLocal(R) || isSolo(L) || isSolo(R)) queueSfxKey("sfxBear");
 }
 
 function initNightOrderStars(){
