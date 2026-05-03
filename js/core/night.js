@@ -5,23 +5,9 @@ function isOnceUsed(k){if(state.ui&&state.ui.ghostCasting)return false;state.onc
 function markOnceUsed(k){if(state.ui&&state.ui.ghostCasting)return;state.once=state.once||{};state.once.Used=state.once.Used||{};var uk=usedKey(k);state.once.Used[uk]=true;}
 function rolesInGame(){return new Set(state.seats.filter(s=>s.role && !s.flags.dead).map(s=>s.role))}
 
+// getFaction: delegate to authoritative getRoleFaction() from roles.js
 function getFaction(roleName) {
-  const r = String(roleName || "");
-  const wolves = [
-    "Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Spiegelwolf",
-    "Dämonischer Wolf","Trugbilderwolf","Schattenhund",
-    "Besessener Wolf","Fenrir","Blutwolf","Albtraumwolf"
-  ];
-  const solos = [
-    "Rattenfänger","Pestbringerin","Hades","Selbstmörder",
-    "Prophet des Untergangs","Feuerteufel","Voodoo-Priester",
-    "Kartenschlucker","Nekromant",
-    "Dr. Victor Frankenstein","Kutscher",
-    "Manipulator","Doppelspion","Grabräuber","Parasit","Todesprediger"
-  ];
-  if (wolves.some(w => r.toLowerCase().includes(w.toLowerCase()))) return "wolf";
-  if (solos.includes(r)) return "solo";
-  return "dorf";
+  return (typeof getRoleFaction === "function") ? getRoleFaction(roleName) : "dorf";
 }
 
 function getFactionIcon(faction) {

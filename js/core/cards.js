@@ -154,7 +154,7 @@ const TOTENKARTEN = {
     {
       id: "schicksal_08",
       kategorie: "SCHICKSAL",
-      name: "Neu Anfang",
+      name: "Neuer Anfang",
       neutral: "Zwei ausgewählte lebende Spieler erhalten eine neue Rolle innerhalb ihrer Fraktion — der Spielleiter informiert beide still."
     },
     {
@@ -440,13 +440,13 @@ const TOTENKARTEN = {
       id: "loki_09",
       kategorie: "LOKI",
       name: "Puppenspieler",
-      neutral: "Der Spielleiter Nominiert am nächsten Tag 5 Spieler es ist mindestens einer aus jeder Fraktion darunter."
+      neutral: "Der Spielleiter nominiert am nächsten Tag 5 Spieler, es ist mindestens einer aus jeder Fraktion darunter."
     },
     {
       id: "loki_10",
       kategorie: "LOKI",
       name: "Phoenix",
-      neutral: "Es werden zwei Würfel gewürfelt, der erste belebt Entsprechend viele zufällige Spieler wieder, der zweite entscheidet für wieviele runden sie am leben bleiben.",
+      neutral: "Es werden zwei Würfel gewürfelt, der erste belebt entsprechend viele zufällige Spieler wieder, der zweite entscheidet für wie viele Runden sie am Leben bleiben.",
       deathCardRequirements: { requiresAnyLivingRoleTag: ["revive", "role-return", "death-trigger-transform"] }
     },
     {

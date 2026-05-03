@@ -172,9 +172,8 @@
   - In `roles.js`, `abilities.js`, `night.js` einpflegen
   - Sind noch nicht definiert — müssen konzipiert werden
 
-- [ ] **Vollständiger Bug-Fix-Durchlauf**
-  - Alle bekannten Bugs dokumentieren und beheben
-  - Edge-Cases testen (sehr große Runden, 4-Spieler-Minimum)
+- [x] **Vollständiger Bug-Fix-Durchlauf (Mai 2026)**
+  - Lone Wolf i18n (EN), SOLO-Set komplett, once-Reset, getFaction, Undo-Tooltip, localStorage try/catch, Viewport-Meta, Schwarze Witwe/Loki-Validierung, cards.js Rechtschreibung, i18n Leerzeichen, Gamelog Zeitstempel
 
 #### 🟡 Priorität 2
 - [ ] **Asset-Ordner bereinigen**

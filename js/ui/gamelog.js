@@ -69,6 +69,15 @@
           const row=document.createElement("div");
           row.className="game-log-entry";
           if(e.color) row.style.color=e.color;
+          try{
+            const d=new Date(e.t);
+            const pad=n=>String(n).padStart(2,"0");
+            const timeSpan=document.createElement("span");
+            timeSpan.className="game-log-time";
+            timeSpan.style.cssText="opacity:0.45;font-size:0.75em;margin-right:4px;";
+            timeSpan.textContent=pad(d.getHours())+":"+pad(d.getMinutes());
+            row.appendChild(timeSpan);
+          }catch(_){}
           const iconSpan=document.createElement("span");
           iconSpan.className="game-log-icon";
           iconSpan.textContent=e.icon||"";

@@ -95,12 +95,25 @@ function save(){
       }
     }
   }catch(e){}
-  localStorage.setItem(LS_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch(e) {
+    console.warn("[Grimmhain] localStorage.setItem failed:", e);
+  }
 
   try{ prophetProgressCheck && prophetProgressCheck(); }catch(e){}
 }
 
-function load(){try{return JSON.parse(localStorage.getItem(LS_KEY))}catch(e){return null}}
+function load(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) {
+    console.warn("[Grimmhain] localStorage load/parse failed:", e);
+    return null;
+  }
+}
 
 // snapshot for undo
 let lastSnapshot=null;

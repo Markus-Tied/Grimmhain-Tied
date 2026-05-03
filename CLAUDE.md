@@ -78,8 +78,12 @@ Werwolf/
 │   │   ├── state.js    ← GameState, localStorage (Key: uw_custom_v16)
 │   │   ├── roles.js    ← 75+ Rollendefinitionen
 │   │   ├── abilities.js← Fähigkeiten-Auflösung (~1150 Zeilen)
+│   │   ├── abilities-helpers.js ← Hilfs-Funktionen für Fähigkeiten
+│   │   ├── abilities-roles-chunk.js ← Zusätzliche Rollenlogik
+│   │   ├── role-abilities.js ← Rollenspezifische Fähigkeiten
 │   │   ├── cards.js    ← Totenkarten-System (Post-Tod-Buffs)
 │   │   ├── night.js    ← Nachtphasen-Reihenfolge
+│   │   ├── akte.js     ← Kuratierte Rollen-Sets / Akte (4 Akte, 72 Rollen)
 │   │   └── i18n.js     ← Übersetzungen DE/EN
 │   └── ui/             ← Web-spezifischer Layer (DOM erlaubt)
 │       ├── core.js     ← Kill-Logik, Tod-Hooks, Siegbedingungen

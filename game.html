@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <script>
 /* Bei file:// keine Google-Fonts/preconnect laden — Chrome meldet sonst oft:
    „Unsafe attempt to load URL file:///…/index.html from frame…“ (eigene Origin pro file-URL). */
@@ -35,7 +36,6 @@
 <script src="js/core/abilities.js"></script>
 <script src="js/core/night.js"></script>
 <script src="js/ui/gamelog.js"></script>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Grimmhain – Spielfeld</title>
 <script>
 if(location.protocol==='http:' || location.protocol==='https:'){
@@ -85,7 +85,7 @@ if(location.protocol==='http:' || location.protocol==='https:'){
   <div class="row"><button class="btn sm" id="fitBtn" data-i18n="autoFit">Auto-Fit</button></div>
   <div class="row"><button class="btn good primary" id="startNight" data-i18n="startNight">Nacht starten</button><button class="btn primary" id="startDay" data-i18n="startDay">Tag starten</button></div>
   <div class="row">
-    <button class="btn sm" id="undoBtn" title="Bis zu 5 Schritte zurück" data-i18n-title="undoTitle" data-i18n="undo">↩ Undo</button>
+    <button class="btn sm" id="undoBtn" title="Letzten Schritt rückgängig machen" data-i18n-title="undoTitle" data-i18n="undo">↩ Undo</button>
     <button class="btn warn sm" id="clearRolesBtn" title="Alle Rollen leeren, Namen behalten, neue Runde (Tag 1)" data-i18n-title="clearRolesTitle" data-i18n="clearRoles">Rollen leeren</button>
     <button class="btn sm" id="logBtn" data-i18n="log">📜 Log</button>
   </div>
@@ -528,6 +528,7 @@ function clearRolesNewRound(){
   state.once.LynchCount=0; state.once.KutscherUsed=false; state.once.Used={}; state.once.WaldhexeL=false; state.once.WaldhexeD=false; state.once.MaertyUsed=false; state.once.PestTotal=0; state.once.PestUsedTonight=false; state.once.ProphetTargets=null; state.once.ProphetUnlocked=false; state.once.VoodooCooldown=0; state.once.MogliVorbildId=null; state.once.LehrlingMentorId=null; state.once.OldDebuff=0; state.once.BlockedRolesTonight=[]; state.once._nightIncremented=false; state.once.GebundenShown=false; state.once.DerWeiseFirstAttackUsed=false;
   state.once.BountyHunterActive=false; state.once.FrankensteinUsed=false;  state.once.KoenigUsed=false; state.once.KopfgeldjägerUsed=false; state.once.MogliUsed=false; state.once.SeelentauscherUsed=false; state.once.BlutpriesterUsed=false; state.once.PestWon=false; state.once.ProphetDeadCount=0; state.once.hunterQueue=[]; state.once.TeamWinner=null; state.fenrirStage=0; state.fenrirSaved=false;
   state.once.totenkarten={}; state.once.KartenschluckerStapel=0; state.once.KartenschluckerKilledTonight=false; state.once.KartenschluckerShield=false; state.once.KartenschluckerNightCount=0; state.once.TotenratFuehrerSilenced=[]; state.once.TotenratFuehrerRevealed=false; state.once.TotenratFuehrerUsedDeflect=false; state.once.TotenratDeathImmunityPending=false; state.once.HadesLichter=0; state.once.HadesBarriere=false; state.once.HadesVoteBonus=false; state.once.HadesKilledTonight=false; state.once.HadesWon=false; assignTotenkarten();
+  state.once.RudelvaterSavedOnce=false; state.once.SeuchenwolfNextAttackPierces=false; state.once.FateWolfMarked=[]; state.once.TodespredigerPrediction=null; state.once.MorningCount=0; state.once.NightUsedRoles=[]; state.once.WhiteWolfCooldown=0; state.once.WhiteWolfUsedTonight=false; state.once.FirstThreeDeadIds=[]; state.once.FateWolfNight4Used=false; state.once.SchmiedForgeNights=0; state.once.PackfatherExtraKillNextNight=false; state.once.PackfatherBlockNextDay=false; state.once.ManipulatorWasNominated=false;
   save(); draw(); rebuildOrder();
   try{ if(typeof window.__renderPhaseCounter==="function") window.__renderPhaseCounter(); }catch(e){}
   var pc=document.getElementById("phaseCounter"); if(pc) pc.textContent="☀️ " + (window.t ? window.t("day") : "Tag") + " 1";
@@ -878,7 +879,7 @@ function _makeListItem(r,colIdx,rowIdx){
       for (var i = 0; i < c; i++) selected.push(role);
     });
     var WOLF = new Set(["Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf","Fenrir","Blutwolf","Albtraumwolf","Cerberus"]);
-    var SOLO = new Set(["Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer"]);
+    var SOLO = window.SOLO_WIN_ROLES || new Set(["Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer","Manipulator","Doppelspion","Grabräuber","Parasit","Todesprediger","Nekromant"]);
     var villagers = [];
     var wolves = [];
     var solo = [];
@@ -1005,7 +1006,7 @@ function _makeListItem(r,colIdx,rowIdx){
   };
 
   var WOLF_ROLES_SET = new Set(["Werwolf","Rachsüchtiger Wolf","König Lykaon","Siegreicher Wolf","Seuchenwolf","Schicksalswolf","Schattenwanderer","Giftwolf","Rudelvater","Schwarze Witwe","Spiegelwolf","Dämonischer Wolf","Trugbilderwolf","Schattenhund","Besessener Wolf","Fenrir","Blutwolf","Albtraumwolf","Cerberus"]);
-  var SOLO_ROLES_SET = new Set(["Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer"]);
+  var SOLO_ROLES_SET = window.SOLO_WIN_ROLES || new Set(["Rattenfänger","Pestbringerin","Hades","Selbstmörder","Prophet des Untergangs","Feuerteufel","Voodoo-Priester","Kartenschlucker","Totenrat-Führer","Manipulator","Doppelspion","Grabräuber","Parasit","Todesprediger","Nekromant"]);
   function buildChipGroups() {
     var villagers = [], wolves = [], solos = [];
     ALL_ROLES_ARR.forEach(function(role) {
@@ -1178,6 +1179,14 @@ function _makeListItem(r,colIdx,rowIdx){
 
   if (setupFertig) setupFertig.onclick = function() {
     if (getSelectedRoleCount() !== ((state && state.seats) ? state.seats.length : 0)) {
+      return;
+    }
+    // Schwarze Witwe benötigt Loki
+    var _selRoles = [];
+    Object.keys(selectedRoleCounts).forEach(function(r){ var c = selectedRoleCounts[r]||0; for(var _i=0;_i<c;_i++) _selRoles.push(r); });
+    if (_selRoles.includes("Schwarze Witwe") && !_selRoles.includes("Loki")) {
+      var _isDE = (localStorage.getItem("grimmhain_lang") || "de") === "de";
+      if (typeof center === "function") center(_isDE ? "⚠️ Schwarze Witwe benötigt Loki im Pool!" : "⚠️ Black Widow requires Loki in the pool!", false);
       return;
     }
     if (typeof window.applySetupBackground === "function") window.applySetupBackground(4, "setupModal");
